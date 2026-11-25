@@ -203,7 +203,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <h1>Failure Report Builder</h1><div class="rule"></div>
   <div class="btns"><button class="go" id="welcomeStart">Create Report</button>
   <button class="go alt" id="welcomePrev">Previous reports</button></div>
-  <button class="lnk bgonly" id="welcomeOpen">or open a saved draft…</button>
+  <button class="lnk" id="welcomeOpen">Open saved report…</button>
 </div>
 <div id="prevs" hidden>
   <div class="ph1"><h2>Previous reports</h2><span id="prevCount" style="color:#8A93A3;font-size:14px"></span><div class="sp"></div>
@@ -219,8 +219,8 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <div class="sp"></div>
   <div class="acts">
   <button class="btn create" id="btnNew" title="Clear everything on this report and start a new one">New report</button>
-  <button class="btn sm bgonly" id="btnLoad">Open draft…</button>
-  <button class="btn create" id="btnSave">Save draft</button>
+  <button class="btn sm bgonly" id="btnLoad">Open saved report…</button>
+  <button class="btn create" id="btnSave" title="Save the editable report (.json with photos) to a folder you choose">Save report</button>
   <button class="btn gold create" id="btnCreate">Create Report</button>
   </div>
   <input type="file" id="draftFile" accept=".json,application/json" hidden>
@@ -567,7 +567,7 @@ const thumbs = {}; // id -> composite thumbnail dataURL (not saved)
 let toastT = null;
 function status(t, kind){ const el = $("#toast"); if(!el || !t) return; el.textContent = t; el.className = "show" + (kind ? " "+kind : ""); clearTimeout(toastT); toastT = setTimeout(() => el.className = "", kind==="ok" ? 2600 : 4200); }
 /* v5: the report is NOT kept between openings – every start is a blank report.
-   Only company profiles, settings and drop-down history are stored. Use Save draft to keep a report. */
+   Only company profiles, settings and drop-down history are stored. Use Save report to keep a report. */
 let DIRTY = false;
 function saveLocal(){}            // kept as a no-op so older call sites stay harmless
 function clearOldAutosave(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} try{ IDB.del("photos"); }catch(e){} }
@@ -866,7 +866,7 @@ $("#mgrSeed").onclick = () => { histMerge(SEED, true); renderMgr(); };
 function download(blob, name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},2000); }
 const safe = s => (s||"").trim().replace(/[^A-Za-z0-9._-]+/g,"_") || "Report";
 function draftJSON(){ return JSON.stringify({app:"BRE Failure Report Builder", version:2, saved:new Date().toISOString(), ...S, profileId:profById(S.profileId).id, profile:resolved(profById(S.profileId))}); }
-function saveDraftFile(){ rememberAll(); download(new Blob([draftJSON()],{type:"application/json"}), safe(S.fields.job)+"_draft.json"); DIRTY = false; status("Draft file saved to your Downloads folder."); }
+function saveDraftFile(){ rememberAll(); download(new Blob([draftJSON()],{type:"application/json"}), safe(S.fields.job)+"_draft.json"); DIRTY = false; status("Report file saved to your Downloads folder."); }
 /* ---------- previous reports (IndexedDB: kv "rep:<id>" = full copy, kv "repIndex" = list) ---------- */
 const newRepId = () => "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 async function repIndex(){ try{ const x = await IDB.get("repIndex"); return Array.isArray(x) ? x : []; }catch(e){ return []; } }
@@ -885,8 +885,30 @@ async function storeReport(kind){   // kind: "report" (Create Report) or "draft"
   await IDB.put("rep:"+id, copy);
   const ni = idx.filter(x => x.id!==id); ni.unshift(meta); await IDB.put("repIndex", ni);
   return meta; }
-async function saveDraft(){ try{ busy(true,"Saving draft…"); const m = await storeReport("draft"); busy(false); DIRTY = false;
-    status(`Draft saved in Previous reports (${m.job || "no job number"}).`); }catch(e){ busy(false); alert("Could not save the draft in this browser: "+e.message+"\nThe draft will be downloaded as a file instead."); saveDraftFile(); } }
+/* Save report: the editable report (.json incl. photos, descriptions, marks, company, heading) is saved to the device.
+   Chrome/Edge: "Save as" picker so you choose the folder; elsewhere (or inside some iframes): normal download. */
+function fileSafe(t){ return String(t||"").trim().replace(/[\\/:*?"<>|\s]+/g,"_").replace(/[^A-Za-z0-9._-]+/g,"").replace(/_+/g,"_").replace(/^[_.]+|[_.]+$/g,"").slice(0,60); }
+function reportFileName(){ const j = fileSafe(S.fields.job), c = fileSafe(S.fields.client);
+  if(j || c) return [j, c].filter(Boolean).join("_") + "_Failure_Report.json";
+  return "Failure_Report_" + (S.fields.date_report || todayISO()) + ".json"; }
+async function saveReport(){
+  rememberAll(); const name = reportFileName(); let handle = null;
+  if(typeof window.showSaveFilePicker === "function"){
+    try{ handle = await window.showSaveFilePicker({ suggestedName:name, id:"failure-reports", startIn:"documents",
+           types:[{description:"Failure report (editable)", accept:{"application/json":[".json"]}}] }); }
+    catch(e){ if(e && e.name==="AbortError") return false;   // cancelled: save nothing, no error
+              handle = null; }                               // picker not allowed here (e.g. iframe) → download instead
+  }
+  if(!S.reportId) S.reportId = newRepId();
+  const blob = new Blob([draftJSON()], {type:"application/json"});
+  let where;
+  try{ busy(true,"Saving report…");
+    if(handle){ const w = await handle.createWritable(); await w.write(blob); await w.close(); where = handle.name || name; }
+    else { download(blob, name); where = name + " (Downloads)"; }
+  }catch(e){ busy(false); alert("Could not save the report file: "+e.message); return false; }
+  let extra = ""; if(hasContent()){ try{ await storeReport("draft"); extra = " · also kept in Previous reports"; }catch(e){ extra = ""; } }  // empty reports are not listed
+  busy(false); DIRTY = false; status(`Report saved: ${where}${extra}.`, "ok"); return true; }
+const saveDraft = saveReport;
 async function openStored(id){ const d = await IDB.get("rep:"+id); if(!d) { alert("That report could not be found any more."); return false; }
   await applyDraft(d); S.reportId = id; $("#prevs").hidden = true; hideWelcome(); showTab("report"); window.scrollTo(0,0);
   status(`Opened ${S.fields.job || "report"} from Previous reports – Create Report updates this entry.`); return true; }
@@ -895,13 +917,13 @@ const fmtD = iso => { if(!iso) return ""; const d = new Date(iso); const p = n =
 const escH = t => String(t||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function renderPrev(){ const idx = (await repIndex()).slice().sort((a,b) => (b.updated||"").localeCompare(a.updated||""));
   const q = $("#prevQ").value.trim().toLowerCase(); const box = $("#prevList"); box.innerHTML = "";
-  const list = idx.filter(m => !q || [m.job,m.client,m.component,m.make,m.model,m.company,fmtD(m.created),fmtD(m.updated),m.reportDate,m.kind==="report"?"report":"draft"].join(" ").toLowerCase().includes(q));
+  const list = idx.filter(m => !q || [m.job,m.client,m.component,m.make,m.model,m.company,fmtD(m.created),fmtD(m.updated),m.reportDate,m.kind==="report"?"report created":"saved"].join(" ").toLowerCase().includes(q));
   $("#prevCount").textContent = idx.length ? `${list.length} of ${idx.length}` : "";
-  if(!idx.length){ box.innerHTML = '<div class="empty">No reports yet. Every report you create (and every draft you save) is kept here automatically.</div>'; return; }
+  if(!idx.length){ box.innerHTML = '<div class="empty">No reports yet. Every report you create or save is kept here automatically.</div>'; return; }
   if(!list.length){ box.innerHTML = '<div class="empty">Nothing matches your search.</div>'; return; }
   for(const m of list){ const r = document.createElement("div"); r.className = "row"; r.dataset.id = m.id;
     r.innerHTML = `<div class="th" style="${m.thumb ? `background-image:url(${m.thumb})` : ""}">${m.thumb ? "" : "no photo"}</div>
-      <div><div class="t1">${escH(m.job || "(no job number)")}<span class="badge ${m.kind==="report"?"rep":"dr"}">${m.kind==="report"?"REPORT":"DRAFT"}</span></div>
+      <div><div class="t1">${escH(m.job || "(no job number)")}<span class="badge ${m.kind==="report"?"rep":"dr"}">${m.kind==="report"?"REPORT":"SAVED"}</span></div>
       <div class="t2">${escH([m.client, m.component, [m.make,m.model].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—")}</div>
       <div class="t3">${escH(m.company)} · created ${fmtD(m.created)}${m.updated && m.updated!==m.created ? " · updated "+fmtD(m.updated) : ""} · ${m.photos} photo${m.photos===1?"":"s"}</div></div>
       <div class="ra"><button class="op">Open</button><button class="rm">Delete</button></div>`;
@@ -911,29 +933,33 @@ async function renderPrev(){ const idx = (await repIndex()).slice().sort((a,b) =
 $("#welcomePrev").onclick = async () => { $("#prevQ").value = ""; $("#prevs").hidden = false; await renderPrev(); $("#prevQ").focus(); };
 $("#prevBack").onclick = () => { $("#prevs").hidden = true; };
 $("#prevQ").addEventListener("input", renderPrev);
-function goHome(){ if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save draft or Create Report) will be lost.")) return;
+function goHome(){ if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save report or Create Report) will be lost.")) return;
   S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); $("#prevs").hidden = true; $("#welcome").hidden = false; }
 $("#btnHome").onclick = $("#hdrTitle").onclick = goHome;
-/* a .json draft file can still be opened by dropping it on the window (no button needed) */
+/* a saved report (.json) can also be opened by dropping it on the window */
 window.addEventListener("dragover", e => { if([...(e.dataTransfer.items||[])].some(i => i.kind==="file")) e.preventDefault(); });
 window.addEventListener("drop", async e => { const f = [...(e.dataTransfer.files||[])].find(f => /\.json$/i.test(f.name)); if(!f) return; e.preventDefault();
-  try{ await applyDraft(JSON.parse(await f.text())); S.reportId = null; $("#prevs").hidden = true; hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
+  await openReportFile(f); });
 async function applyDraft(d){
   const b = blankState();
   S = {...b, ...d, fields:{...b.fields, ...(d.fields||{})}}; delete S.profile; delete S.app; delete S.version; delete S.saved; S.reportId = null;
   if(d.profile && d.profile.id && !PROFS.profiles.some(p => p.id===d.profile.id)){ // draft made with a company this PC doesn't have yet
-    const np = {...d.profile, builtin:false}; PROFS.profiles.push(np); profSave(); status(`Added company profile "${np.name}" from the draft.`); }
+    const np = {...d.profile, builtin:false}; PROFS.profiles.push(np); profSave(); status(`Added company profile "${np.name}" from the saved report.`); }
   if(!PROFS.profiles.some(p => p.id===S.profileId)) S.profileId = PROFS.defaultId;
   S.photos = (d.photos||[]).map(p => normMarks({caption:"", ...p, id:"p"+(uid++)}));
-  busy(true,"Opening draft…"); for(const p of S.photos) await refreshThumb(p); busy(false);
+  busy(true,"Opening report…"); for(const p of S.photos) await refreshThumb(p); busy(false);
   renderFields(); renderPhotos(); applyTheme(); DIRTY = false;
 }
-$("#btnSave").onclick = saveDraft;
+$("#btnSave").onclick = saveReport;
 $("#btnLoad").onclick = () => $("#draftFile").click();
-$("#draftFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  try{ await applyDraft(JSON.parse(await f.text())); $("#prevs").hidden = true; hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
+async function openReportFile(f){
+  try{ const d = JSON.parse(await f.text()); if(!d || typeof d!=="object" || !(d.fields || d.photos)) throw new Error("no report data in the file");
+    await applyDraft(d); const idx = await repIndex(); if(d.reportId && idx.some(x => x.id===d.reportId)) S.reportId = d.reportId;
+    $("#prevs").hidden = true; hideWelcome(); showTab("report"); window.scrollTo(0,0); status(`Opened saved report ${f.name}.`); return true; }
+  catch(err){ busy(false); alert("That file isn't a saved failure report: "+err.message); return false; } }
+$("#draftFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(f) await openReportFile(f); });
 function newReport(){ // clears the current report only – Previous reports, company profiles and drop-down history are untouched
-  if(hasContent() && DIRTY && !confirm("Start a new report? Everything on this report that is not saved (Save draft or Create Report) will be cleared.")) return false;
+  if(hasContent() && DIRTY && !confirm("Start a new report? Everything on this report that is not saved (Save report or Create Report) will be cleared.")) return false;
   S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; Object.keys(thumbs).forEach(k => delete thumbs[k]); acClose();
   renderFields(); renderPhotos(); applyTheme(); showTab("report"); window.scrollTo(0,0); status("New report – all fields cleared.", "ok"); return true; }
 $("#btnNew").onclick = newReport;
@@ -1270,7 +1296,7 @@ $("#pFile").addEventListener("change", async e => { const f = e.target.files[0];
   catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
-window.BRE = { get state(){return S;}, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+window.BRE = { get state(){return S;}, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
