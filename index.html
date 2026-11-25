@@ -218,7 +218,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <div class="tabs"><button class="tab on" data-tab="report" title="Report – job details and photos">📝 Report</button><button class="tab" data-tab="settings" title="Settings – company profiles (logo, colours, details)">⚙ Settings</button></div>
   <div class="sp"></div>
   <div class="acts">
-  <button class="btn sm bgonly" id="btnNew">New report</button>
+  <button class="btn create" id="btnNew" title="Clear everything on this report and start a new one">New report</button>
   <button class="btn sm bgonly" id="btnLoad">Open draft…</button>
   <button class="btn create" id="btnSave">Save draft</button>
   <button class="btn gold create" id="btnCreate">Create Report</button>
@@ -932,7 +932,11 @@ $("#btnSave").onclick = saveDraft;
 $("#btnLoad").onclick = () => $("#draftFile").click();
 $("#draftFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return;
   try{ await applyDraft(JSON.parse(await f.text())); $("#prevs").hidden = true; hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
-$("#btnNew").onclick = () => { if(hasContent() && DIRTY && !confirm("Start a new blank report? Anything not saved as a draft will be cleared.")) return; S = blankState(); DIRTY = false; renderFields(); renderPhotos(); applyTheme(); status("New blank report."); };
+function newReport(){ // clears the current report only – Previous reports, company profiles and drop-down history are untouched
+  if(hasContent() && DIRTY && !confirm("Start a new report? Everything on this report that is not saved (Save draft or Create Report) will be cleared.")) return false;
+  S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; Object.keys(thumbs).forEach(k => delete thumbs[k]); acClose();
+  renderFields(); renderPhotos(); applyTheme(); showTab("report"); window.scrollTo(0,0); status("New report – all fields cleared.", "ok"); return true; }
+$("#btnNew").onclick = newReport;
 function busy(on, t){ $("#busy").classList.toggle("show", on); if(t) $("#busy").textContent = t; }
 
 /* ================= PPTX BUILDER ================= */
@@ -1266,7 +1270,7 @@ $("#pFile").addEventListener("change", async e => { const f = e.target.files[0];
   catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
-window.BRE = { get state(){return S;}, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+window.BRE = { get state(){return S;}, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
