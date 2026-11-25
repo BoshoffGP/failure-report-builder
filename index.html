@@ -67,10 +67,14 @@ textarea{resize:vertical;min-height:70px}
 .lst .add{margin:0 10px 10px;width:calc(100% - 20px)}
 #toast{position:fixed;right:22px;bottom:22px;z-index:200;max-width:460px;background:#1F2937;color:#F9FAFB;border-left:4px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}
 #toast.show{opacity:1;transform:none}
-#toast.ok{border-left-color:#22C55E}
+#toast.ok{border-left-color:#22C55E}#toast.err{border-left-color:#DC2626}
 .savebar{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .savebar .st{font-size:13.5px;color:var(--grey)}
 .savebar .st.dirty{color:#B45309;font-weight:700}
+.applyrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 4px}
+.applyrow .pend{font-size:13.5px;font-weight:700;color:#B45309;background:#FFF7E6;border:1px solid #F5C77E;border-radius:6px;padding:5px 10px}
+.applyrow .colerr{font-size:13px;color:#B91C1C;font-weight:600}.applyrow .colerr.info{color:var(--grey);font-weight:500}
+.colf input.bad{border-color:#DC2626!important;box-shadow:0 0 0 2px rgba(220,38,38,.18)}
 .savebar .st.ok{color:#15803D;font-weight:700}
 .savebar .btn.gold{min-width:150px;font-size:16px;padding:12px 26px}
 .savebar .btn.gold:hover{filter:brightness(1.06)}
@@ -340,6 +344,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
         <div><div class="hint">Dark / secondary (top bars, headers, titles)</div><div class="colf"><input type="color" id="cDark"><input type="text" id="hDark" maxlength="7"></div></div>
         <div><div class="hint">Report header style</div><select data-pk="headerStyle"><option value="auto">Automatic (from logo)</option><option value="light">Light – logo on white</option><option value="band">Dark band – logo on dark colour</option></select></div>
       </div>
+      <div class="applyrow"><button class="btn sm navy" id="colApply" title="Preview the colour codes typed above (Enter also works)">✔ Apply</button><span class="pend" id="colPend" hidden>Preview – click Save to keep</span><span class="colerr" id="colErr"></span></div>
       <div class="aibox" id="aiBox">
         <div class="aih"><span class="ait">✨ AI colour match</span><span class="aisub">Analyses the logo on this computer (works offline) and sets the theme colours and header style.</span></div>
         <div class="aih"><label class="aisw"><input type="checkbox" id="aiToggle"><span class="tr"></span><span>Automatically match theme colours to logo</span></label>
@@ -537,6 +542,10 @@ const BUILTIN_PROFILES = [
       website:"", coreg:"2011/005460/23", vat:"474 0285 426", extra:"Import/Export: 2193 4440"}, showDetails:true, footer:"HJ Stander | Failure Report"}
 ];
 let PROFS = {profiles:[], defaultId:"blackrock"};
+/* v17: colour preview – Apply / colour picker change the look only; Save or "Use for this report" keeps it; leaving reverts */
+const PK = ["accent","dark","accentText","aiMatch","aiPrev","aiOffHint","aiResult"]; let PEND = null;   // {id, base:{saved values}}
+function pendingSafe(){ if(!PEND) return PROFS; const d = JSON.parse(JSON.stringify(PROFS)), q = d.profiles.find(x => x.id===PEND.id);
+  if(q) PK.forEach(k => { if(PEND.base[k]===undefined) delete q[k]; else q[k] = JSON.parse(JSON.stringify(PEND.base[k])); }); return d; }
 const clone = o => JSON.parse(JSON.stringify(o));
 function profLoad(){
   try{ const t = JSON.parse(localStorage.getItem(PROF_KEY)||"null"); if(t && Array.isArray(t.profiles)) PROFS = t; }catch(e){}
@@ -549,7 +558,7 @@ function profLoad(){
   if(br && br.aiPrev && isOld(br.aiPrev)){ Object.assign(br.aiPrev, NEW_BR); mig = true; }
   if(mig) try{ localStorage.setItem(PROF_KEY, JSON.stringify(PROFS)); }catch(e){}
 }
-function profSave(){ try{ localStorage.setItem(PROF_KEY, JSON.stringify(PROFS)); return true; }catch(e){ alert("Could not save the company profiles – the browser storage is full. Try a smaller logo, or export profiles and delete unused ones."); return false; } }
+function profSave(){ try{ localStorage.setItem(PROF_KEY, JSON.stringify(pendingSafe())); return true; }catch(e){ alert("Could not save the company profiles – the browser storage is full. Try a smaller logo, or export profiles and delete unused ones."); return false; } }
 const profById = id => PROFS.profiles.find(p => p.id===id) || PROFS.profiles.find(p => p.id===PROFS.defaultId) || PROFS.profiles[0];
 function logoOf(p){ if(String(p.logo||"").startsWith("builtin:")){ const b = BUILTIN_LOGOS[p.logo.slice(8)]; return b ? {data:b.data, ar:b.ar, dark:b.dark} : null; }
   return p.logo ? {data:p.logo, ar:p.logoAR||1.4, dark:!!p.logoDark} : null; }
@@ -566,7 +575,7 @@ function themeOf(p){
     accentOnDark: contrast(accent,dark) >= 3 ? accent : onColour(dark), subOnDark: mix(onColour(dark), dark, 0.3), logo: lg};
 }
 function applyTheme(){
-  const p = profById(S.profileId), T = themeOf(p), r = document.documentElement.style, H = c => "#"+c;
+  const p = (PEND && PEND.id===SEL && !$("#settingsView").hidden) ? selProf() : profById(S.profileId), T = themeOf(p), r = document.documentElement.style, H = c => "#"+c;
   r.setProperty("--navy", H(T.dark)); r.setProperty("--gold", H(T.accent)); r.setProperty("--golddk", H(T.accentText));
   r.setProperty("--on-dark", H(T.onDark)); r.setProperty("--on-accent", H(T.onAccent)); r.setProperty("--tint", H(mix(T.accent,"FFFFFF",0.88)));
   r.setProperty("--na-fill", H(T.naFill)); r.setProperty("--na-text", H(T.naText));
@@ -919,6 +928,7 @@ function reportFileName(){ const j = fileSafe(S.fields.job), c = fileSafe(S.fiel
   if(j || c) return [j, c].filter(Boolean).join("_") + "_Failure_Report.json";
   return "Failure_Report_" + (S.fields.date_report || todayISO()) + ".json"; }
 async function saveReport(){
+  revertPending();
   rememberAll(); const name = reportFileName(); let handle = null;
   if(typeof window.showSaveFilePicker === "function"){
     try{ handle = await window.showSaveFilePicker({ suggestedName:name, id:"failure-reports", startIn:"documents",
@@ -960,7 +970,7 @@ async function renderPrev(){ const idx = (await repIndex()).slice().sort((a,b) =
 $("#welcomePrev").onclick = async () => { $("#prevQ").value = ""; $("#prevs").hidden = false; await renderPrev(); $("#prevQ").focus(); };
 $("#prevBack").onclick = () => { $("#prevs").hidden = true; };
 $("#prevQ").addEventListener("input", renderPrev);
-function goHome(){ if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save report or Create Report) will be lost.")) return;
+function goHome(){ revertPending(true); if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save report or Create Report) will be lost.")) return;
   S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); $("#prevs").hidden = true; $("#welcome").hidden = false; }
 $("#btnHome").onclick = $("#hdrTitle").onclick = goHome;
 /* a saved report (.json) can also be opened by dropping it on the window */
@@ -1176,6 +1186,7 @@ async function buildPptx(st){
 }
 
 async function createReport(){
+  revertPending();
   if(!S.fields.job.trim() && !confirm("No job number entered. Create the report anyway?")) return;
   if(!S.photos.length && !confirm("No photos added. Create the report anyway?")) return;
   rememberAll();
@@ -1190,7 +1201,7 @@ async function createReport(){
 $("#btnCreate").onclick = createReport;
 
 /* ---------- tabs & settings ---------- */
-function showTab(t){ $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t)); $("#reportView").hidden = t!=="report"; $("#settingsView").hidden = t!=="settings";
+function showTab(t){ if(t!=="settings") revertPending(); $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t)); $("#reportView").hidden = t!=="report"; $("#settingsView").hidden = t!=="settings";
   if(t==="settings"){ if(!PROFS.profiles.some(p=>p.id===SEL)) SEL = profById(S.profileId).id; renderSettings(); } window.scrollTo(0,0); }
 $$(".tab").forEach(b => b.onclick = () => { if(b.dataset.tab==="settings") SEL = profById(S.profileId).id; showTab(b.dataset.tab); });
 $("#pbEdit").onclick = () => { SEL = profById(S.profileId).id; showTab("settings"); };
@@ -1215,7 +1226,7 @@ function renderPList(){
     el.onclick = () => { SEL = p.id; renderSettings(); }; box.append(el); });
 }
 let lastSettingsSel = null;
-function renderSettings(){ if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; resetProfState(); } setTimeout(renderAI, 0);
+function renderSettings(){ if(PEND && PEND.id!==SEL) revertPending(); if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; resetProfState(); } setTimeout(renderAI, 0);
   const p = selProf(); renderPList();
   $$("[data-pk]").forEach(el => { const v = getK(p, el.dataset.pk); if(el.type==="checkbox") el.checked = !!v; else el.value = v ?? (el.dataset.pk==="headerStyle" ? "auto" : ""); });
   $("#cAccent").value = "#"+(hx(p.accent)||"F0B429"); $("#hAccent").value = "#"+(hx(p.accent)||"F0B429");
@@ -1224,7 +1235,7 @@ function renderSettings(){ if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; res
   $("#pLogoInfo").textContent = lg ? `Logo ${lg.ar.toFixed(2)} : 1 (width : height)` : "No logo yet";
   $("#pRestore").hidden = !p.builtin; $("#pDel").disabled = !!p.builtin;
   $("#pState").textContent = p.id===profById(S.profileId).id ? "✔ Used by the current report" : "";
-  $("#pSugg").innerHTML = ""; renderPreview();
+  $("#pSugg").innerHTML = ""; renderPreview(); renderPend();
 }
 function renderPreview(){
   const p = selProf(), T = themeOf(p), lg = T.logo, H = c => "#"+c;
@@ -1244,9 +1255,33 @@ function renderPreview(){
 $$("[data-pk]").forEach(el => el.addEventListener(el.type==="checkbox" || el.tagName==="SELECT" ? "change" : "input", () => {
   const p = selProf(); setK(p, el.dataset.pk, el.type==="checkbox" ? el.checked : el.value); profChanged(); }));
 function bindColour(c, h, key){
-  $(c).addEventListener("input", () => { $(h).value = $(c).value.toUpperCase(); selProf()[key] = hx($(c).value); if(key==="accent") delete selProf().accentText; profChanged(); });
-  $(h).addEventListener("input", () => { const v = hx($(h).value); if(!v) return; $(c).value = "#"+v; selProf()[key] = v; if(key==="accent") delete selProf().accentText; profChanged(); });
+  $(c).addEventListener("input", () => { $(h).value = $(c).value.toUpperCase(); $(h).classList.remove("bad"); colMsg(""); previewColours({[key]: hx($(c).value)}); });   // swatch: live preview
+  $(h).addEventListener("input", () => { $(h).classList.remove("bad"); const p = selProf(), typed = hx($(h).value);
+    colMsg(typed && typed===hx(p[key]) ? "" : "Click Apply (or press Enter) to see the new colour.", true); });
+  $(h).addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); applyColours(); } });
 }
+function colMsg(t, info){ const e = $("#colErr"); if(!e) return; e.textContent = t; e.className = "colerr" + (info ? " info" : ""); }
+function renderPend(){ const on = !!(PEND && PEND.id===SEL); $("#colPend").hidden = !on;
+  if(on){ const st = $("#pSaveState"); st.textContent = "● Preview – click Save to keep"; st.className = "st dirty"; } }
+function previewColours(vals){ const p = selProf(); vals = Object.fromEntries(Object.entries(vals).filter(([k,v]) => v && hx(p[k])!==v)); if(!Object.keys(vals).length) return false;
+  if(PEND && PEND.id!==p.id) revertPending(true);
+  if(!PEND){ PEND = {id:p.id, base:{}}; PK.forEach(k => PEND.base[k] = p[k]===undefined ? undefined : JSON.parse(JSON.stringify(p[k]))); }
+  aiManualOverride(); Object.assign(p, vals); if(vals.accent) delete p.accentText;
+  $("#cAccent").value = $("#hAccent").value = "#"+(hx(p.accent)||"F0B429"); $("#cDark").value = $("#hDark").value = "#"+(hx(p.dark)||"14213D");
+  renderPList(); renderPreview(); applyTheme(); renderPend(); return true; }
+function applyColours(){ const bad = [];
+  const v = {}; [["#hAccent","accent","Accent"],["#hDark","dark","Dark / secondary"]].forEach(([id,k,n]) => { const raw = $(id).value.trim(), c = hx(raw);
+    if(!c){ bad.push(`${n}: “${raw || "(empty)"}”`); $(id).classList.add("bad"); } else { $(id).classList.remove("bad"); v[k] = c; } });
+  if(bad.length){ colMsg(`Not a valid colour code – ${bad.join(", ")}. Use 6 hex digits, e.g. #F0B429.`); status("Invalid colour code – use 6 hex digits, e.g. #F0B429.", "err"); return false; }
+  colMsg(""); const ch = previewColours(v);
+  if(ch) status("Colours applied as a preview – click Save to keep them."); else if(!PEND) status("Those are already the saved colours.");
+  return true; }
+function revertPending(quiet){ if(!PEND) return false; const id = PEND.id, base = PEND.base; PEND = null; const p = PROFS.profiles.find(x => x.id===id);
+  if(p) PK.forEach(k => { if(base[k]===undefined) delete p[k]; else p[k] = base[k]; });
+  if(!$("#settingsView").hidden && SEL===id) renderSettings(); else renderPList(); applyTheme(); renderProfSel();
+  if(!quiet) status("Colour preview not saved – the saved colours are back.");
+  return true; }
+function commitPending(){ if(!PEND) return false; PEND = null; return true; }
 bindColour("#cAccent","#hAccent","accent"); bindColour("#cDark","#hDark","dark");
 async function processLogo(src, trim){ // trim edges that match the corner colour, downscale, report aspect + dark background
   const im = await loadImg(src); let w = im.naturalWidth, h = im.naturalHeight;
@@ -1341,19 +1376,19 @@ function renderAI(){ const p = selProf(); if(!p || !$("#aiToggle")) return; $("#
   $("#aiRematch").disabled = !p.aiMatch; const n = $("#aiNote"); n.className = "ainote";
   if(p.aiMatch) n.innerHTML = aiNoteHTML(p) || (logoOf(p) ? "" : "Upload a logo and the colours will be matched automatically.");
   else n.innerHTML = p.aiOffHint ? `<span>${p.aiOffHint}</span>` : '<span class="aisub">Off – colours are set by hand below.</span>'; if(!p.aiMatch && p.aiOffHint) n.classList.add("warn"); }
-async function runAIMatch(quiet){ const p = selProf(), lg = logoOf(p); if(!lg){ renderAI(); if(!quiet) status("Upload a logo first – then AI colour match can read it."); return null; }
+async function runAIMatch(quiet){ revertPending(true); const p = selProf(), lg = logoOf(p); if(!lg){ renderAI(); if(!quiet) status("Upload a logo first – then AI colour match can read it."); return null; }
   busy(true, "✨ Matching colours to the logo…"); let r = null; try{ r = await aiMatchColours(lg.data); }catch(e){ r = null; } busy(false);
   if(!r){ $("#aiNote").innerHTML = "<span>Could not find clear colours in this logo – set them by hand.</span>"; $("#aiNote").className = "ainote warn"; return null; }
   p.accent = r.accent; p.dark = r.dark; p.headerStyle = r.headerStyle; delete p.accentText; p.aiResult = r; delete p.aiOffHint;
   renderSettings(); profChanged(); renderAI(); status(`✨ Colours matched to the logo: accent #${r.accent}, dark #${r.dark}.`, "ok"); return r; }
 function aiManualOverride(){ const p = selProf(); if(p && p.aiMatch){ p.aiMatch = false; delete p.aiPrev; p.aiOffHint = "AI colour match switched off because you changed a colour by hand. Turn it on again to re-match."; profSave(); renderAI(); } }
-$("#aiToggle").addEventListener("change", async e => { const p = selProf(); p.aiMatch = e.target.checked; delete p.aiOffHint;
+$("#aiToggle").addEventListener("change", async e => { revertPending(true); const p = selProf(); p.aiMatch = e.target.checked; delete p.aiOffHint;
   if(p.aiMatch){ if(!p.aiPrev) p.aiPrev = {accent:p.accent, dark:p.dark, headerStyle:p.headerStyle, accentText:p.accentText}; profSave(); renderAI(); await runAIMatch(); }
   else { const v = p.aiPrev; delete p.aiPrev;
     if(v){ ["accent","dark","headerStyle","accentText"].forEach(k => { if(v[k] === undefined) delete p[k]; else p[k] = v[k]; }); renderSettings(); profChanged(); renderAI(); status("Colours restored", "ok"); }
     else { profSave(); renderAI(); profChanged(); } } });
 $("#aiRematch").onclick = () => runAIMatch();
-["#cAccent","#hAccent","#cDark","#hDark"].forEach(id => $(id).addEventListener("input", aiManualOverride, true));
+
 document.querySelector('[data-pk="headerStyle"]').addEventListener("change", aiManualOverride, true);
 $("#pPick").onclick = async () => { const p = selProf(), lg = logoOf(p); if(!lg){ alert("Upload a logo first."); return; }
   const cols = await logoColours(lg.data), box = $("#pSugg"); box.innerHTML = "";
@@ -1364,10 +1399,10 @@ $("#pPick").onclick = async () => { const p = selProf(), lg = logoOf(p); if(!lg)
   const rest = cand.filter(c => c.hex!==bestDark), pool = rest.length ? rest : cand;
   const bestAccent = pool.slice().sort((a,b) => sat(b.hex)*Math.sqrt(b.n) - sat(a.hex)*Math.sqrt(a.n))[0].hex;  // most colourful
   const sug = document.createElement("div"); sug.className = "sg"; sug.innerHTML = `<button class="btn sm gold" style="font-size:12px">Use suggested: accent #${bestAccent} + dark #${bestDark}</button>`;
-  sug.querySelector("button").onclick = () => { aiManualOverride(); p.accent = bestAccent; p.dark = bestDark; delete p.accentText; renderSettings(); profChanged(); }; box.append(sug);
+  sug.querySelector("button").onclick = () => { previewColours({accent:bestAccent, dark:bestDark}); status("Suggested colours applied as a preview – click Save to keep them."); }; box.append(sug);
   cols.forEach(c => { const el = document.createElement("div"); el.className = "sg";
     el.innerHTML = `<div class="c" style="background:#${c.hex}"></div>#${c.hex}<button data-k="accent">accent</button><button data-k="dark">dark</button>`;
-    el.querySelectorAll("button").forEach(b => b.onclick = () => { aiManualOverride(); p[b.dataset.k] = c.hex; if(b.dataset.k==="accent") delete p.accentText; renderSettings(); profChanged(); }); box.append(el); });
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { previewColours({[b.dataset.k]: c.hex}); status("Colour applied as a preview – click Save to keep it."); }); box.append(el); });
   box.dataset.accent = bestAccent; box.dataset.dark = bestDark;
 };
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -1379,11 +1414,11 @@ $("#pDup").onclick = () => { const s0 = selProf(); const p = {...clone(resolved(
 $("#pDel").onclick = () => { const p = selProf(); if(p.builtin) return; if(!confirm(`Delete the company profile "${p.name}"?`)) return;
   PROFS.profiles = PROFS.profiles.filter(x => x.id!==p.id); if(PROFS.defaultId===p.id) PROFS.defaultId = "blackrock"; if(S.profileId===p.id){ S.profileId = PROFS.defaultId; autosave(); }
   SEL = PROFS.defaultId; profSave(); renderSettings(); applyTheme(); };
-$("#pRestore").onclick = () => { const p = selProf(), b = BUILTIN_PROFILES.find(x => x.id===p.id); if(!b || !confirm(`Restore ${b.name} to its original logo, colours and details?`)) return;
+$("#pRestore").onclick = () => { const p0 = selProf(), b = BUILTIN_PROFILES.find(x => x.id===p0.id); if(!b || !confirm(`Restore ${b.name} to its original logo, colours and details?`)) return; commitPending(); const p = selProf();
   PROFS.profiles[PROFS.profiles.indexOf(p)] = clone(b); profSave(); renderSettings(); profChanged(); };
-$("#pUse").onclick = () => { S.profileId = SEL; applyTheme(); autosave(); renderSettings(); status(`This report now uses ${selProf().name}.`); };
+$("#pUse").onclick = () => { if(commitPending()) profSave(); S.profileId = SEL; applyTheme(); autosave(); renderSettings(); status(`This report now uses ${selProf().name}.`); };
 $("#pSave").onclick = () => { const p = selProf(); if(!p.name || !p.name.trim()){ alert("Please enter the company name first."); return; }
-  if(profSave()){ renderPList(); renderProfSel(); if(SEL===profById(S.profileId).id) applyTheme(); markProfSaved(); status(`Saved – ${p.name} company details.`, "ok"); } };
+  const had = commitPending(); if(profSave()){ renderPList(); renderProfSel(); applyTheme(); renderPend(); markProfSaved(); if(had) status(`Saved – ${p.name} colours and details.`, "ok"); else status(`Saved – ${p.name} company details.`, "ok"); } };
 $("#pDefault").onclick = () => { PROFS.defaultId = SEL; profSave(); renderSettings(); renderProfSel(); status(`${selProf().name} is now the default for new reports.`); };
 $("#pExport").onclick = () => { download(new Blob([JSON.stringify({app:"Failure Report Builder – company profiles", version:1, saved:new Date().toISOString(), defaultId:PROFS.defaultId, profiles:PROFS.profiles.map(resolved)}, null, 1)], {type:"application/json"}), "Company_profiles.json"); status("Company profiles exported to your Downloads folder."); };
 $("#pImport").onclick = () => $("#pFile").click();
@@ -1397,7 +1432,8 @@ $("#pFile").addEventListener("change", async e => { const f = e.target.files[0];
   catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
-window.BRE = { get state(){return S;}, aiMatchColours, runAIMatch, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+$("#colApply").onclick = applyColours;
+window.BRE = { get pending(){return PEND;}, revertPending, applyColours, get state(){return S;}, aiMatchColours, runAIMatch, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
