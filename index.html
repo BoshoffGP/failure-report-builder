@@ -97,22 +97,6 @@ header.top .btn.create{padding:9px 18px;font-size:15px;border-width:2px;box-shad
 #welcome .go.alt{background:transparent;color:#F3F4F6;border:2px solid #9CA3AF;box-shadow:none}
 #welcome .go.alt:hover{background:rgba(255,255,255,.08);border-color:#E5E7EB}
 .bgonly{display:none!important}
-/* v18 sign-in gate */
-#signin{display:flex;flex-direction:column;gap:12px;width:min(360px,90vw);text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-top:3px solid #F0B429;border-radius:14px;padding:22px 24px 20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-#signin[hidden],#welcomeMain[hidden]{display:none}
-#signin .sh{font-size:17px;font-weight:700;color:#F3F4F6;margin:0 0 2px}
-#signin label{font-size:12.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#C3C9D3;display:flex;flex-direction:column;gap:6px}
-#signin input{font:inherit;font-size:16px;font-weight:500;text-transform:none;letter-spacing:0;padding:11px 12px;border-radius:9px;border:1.5px solid #4B5563;background:#0F1420;color:#F3F4F6;outline:none}
-#signin input:focus{border-color:#F0B429;box-shadow:0 0 0 3px rgba(240,180,41,.25)}
-#signin input.bad{border-color:#F87171}
-#signin .go{margin-top:6px;font-size:18px;padding:14px 20px;width:100%}
-#signin .go[disabled]{opacity:.6;cursor:wait}
-#signinErr{min-height:20px;font-size:14px;font-weight:600;color:#FCA5A5}
-#welcomeMain{display:flex;flex-direction:column;align-items:center;gap:22px}
-#welcome .who{font-size:13.5px;color:#9CA3AF;margin-top:-6px}
-#welcome .who b{color:#E5E7EB;font-weight:600}
-header.top .signout{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:var(--on-dark);border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
-header.top .signout:hover{border-color:var(--gold);color:var(--gold)}
 /* header buttons: hover = same accent look as Create Report */
 header.top .acts .btn{transition:background .12s,border-color .12s,color .12s,box-shadow .12s,transform .12s}
 header.top .acts .btn:hover,header.top .acts .btn:focus-visible{background:var(--gold);border-color:var(--gold);color:var(--on-accent);box-shadow:0 2px 8px rgba(0,0,0,.25);filter:none;transform:translateY(-1px)}
@@ -236,19 +220,9 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 <body>
 <div id="welcome">
   <h1>Failure Report Builder</h1><div class="rule"></div>
-  <form id="signin" autocomplete="on" novalidate>
-    <div class="sh">Sign in</div>
-    <label>Email address<input type="email" id="siEmail" autocomplete="username" placeholder="name@company.co.za" required></label>
-    <label>Password (access code)<input type="password" id="siPass" autocomplete="current-password" inputmode="numeric" placeholder="Code given to you" required></label>
-    <div id="signinErr" role="alert" aria-live="assertive"></div>
-    <button class="go" type="submit" id="siBtn">Sign in</button>
-  </form>
-  <div id="welcomeMain" hidden>
   <div class="btns"><button class="go" id="welcomeStart">Create Report</button>
   <button class="go alt" id="welcomePrev">Previous reports</button></div>
-  <button class="lnk bgonly" id="welcomeOpen">Open saved report…</button>
-  <div class="who" id="whoAmI"></div>
-  </div>
+  <button class="lnk" id="welcomeOpen">Open saved report…</button>
 </div>
 <div id="prevs" hidden>
   <div class="ph1"><h2>Previous reports</h2><span id="prevCount" style="color:#8A93A3;font-size:14px"></span><div class="sp"></div>
@@ -267,7 +241,6 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <button class="btn sm bgonly" id="btnLoad">Open saved report…</button>
   <button class="btn create" id="btnSave" title="Save the editable report (.json with photos) to a folder you choose">Save report</button>
   <button class="btn gold create" id="btnCreate">Create Report</button>
-  <button class="signout" id="btnSignOut" title="Sign out">⎋ Sign out</button>
   </div>
   <input type="file" id="draftFile" accept=".json,application/json" hidden>
 </header>
@@ -339,8 +312,8 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
         <button class="btn gold" id="pAdd">＋ Add new company</button>
         <button class="btn sm bgonly" id="pDup">📄 Duplicate selected</button>
         <button class="btn sm danger bgonly" id="pDel">🗑 Delete selected</button>
-        <button class="btn sm" id="pExport" title="Download all companies (logos, colours, details) as frb-companies.json – use it as a backup or to move them to another computer / the online version">⬇ Export companies</button>
-        <button class="btn sm" id="pImport" title="Add companies from an frb-companies.json file (existing ones with the same name are updated)">⬆ Import companies</button>
+        <button class="btn sm bgonly" id="pExport">⬇ Export profiles…</button>
+        <button class="btn sm bgonly" id="pImport">⬆ Import profiles…</button>
         <input type="file" id="pFile" accept=".json,application/json" hidden>
       </div>
     </div>
@@ -994,7 +967,7 @@ async function renderPrev(){ const idx = (await repIndex()).slice().sort((a,b) =
     r.querySelector(".op").onclick = async () => { try{ await openStored(m.id); }catch(e){ busy(false); alert("Could not open the report: "+e.message); } };
     r.querySelector(".rm").onclick = async () => { if(!confirm(`Delete ${m.job || "this report"} (${m.client || "no client"}) from Previous reports?\nThis cannot be undone.`)) return; await deleteStored(m.id); renderPrev(); };
     box.append(r); } }
-$("#welcomePrev").onclick = async () => { if(!signedInEmail()){ renderGate(); return; } $("#prevQ").value = ""; $("#prevs").hidden = false; await renderPrev(); $("#prevQ").focus(); };
+$("#welcomePrev").onclick = async () => { $("#prevQ").value = ""; $("#prevs").hidden = false; await renderPrev(); $("#prevQ").focus(); };
 $("#prevBack").onclick = () => { $("#prevs").hidden = true; };
 $("#prevQ").addEventListener("input", renderPrev);
 function goHome(){ revertPending(true); if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save report or Create Report) will be lost.")) return;
@@ -1447,72 +1420,32 @@ $("#pUse").onclick = () => { if(commitPending()) profSave(); S.profileId = SEL; 
 $("#pSave").onclick = () => { const p = selProf(); if(!p.name || !p.name.trim()){ alert("Please enter the company name first."); return; }
   const had = commitPending(); if(profSave()){ renderPList(); renderProfSel(); applyTheme(); renderPend(); markProfSaved(); if(had) status(`Saved – ${p.name} colours and details.`, "ok"); else status(`Saved – ${p.name} company details.`, "ok"); } };
 $("#pDefault").onclick = () => { PROFS.defaultId = SEL; profSave(); renderSettings(); renderProfSel(); status(`${selProf().name} is now the default for new reports.`); };
-$("#pExport").onclick = () => { const data = pendingSafe(); download(new Blob([JSON.stringify({app:"Failure Report Builder – companies", version:2, saved:new Date().toISOString(), defaultId:data.defaultId, profiles:data.profiles.map(resolved)}, null, 1)], {type:"application/json"}), "frb-companies.json"); status(`Exported ${data.profiles.length} companies to frb-companies.json (Downloads folder).`, "ok"); };
+$("#pExport").onclick = () => { download(new Blob([JSON.stringify({app:"Failure Report Builder – company profiles", version:1, saved:new Date().toISOString(), defaultId:PROFS.defaultId, profiles:PROFS.profiles.map(resolved)}, null, 1)], {type:"application/json"}), "Company_profiles.json"); status("Company profiles exported to your Downloads folder."); };
 $("#pImport").onclick = () => $("#pFile").click();
 $("#pFile").addEventListener("change", async e => { const f = e.target.files[0]; e.target.value = ""; if(!f) return;
-  try{ const d = JSON.parse(await f.text()), list = Array.isArray(d) ? d : (d.profiles || (d.id ? [d] : [])); if(!list.length) throw new Error("no companies in this file");
-    revertPending(true); const backup = JSON.stringify(PROFS); let added = 0, updated = 0; const norm = t => String(t||"").trim().toLowerCase();
-    list.forEach(np => { if(!np || !np.name || !String(np.name).trim()) return; np = JSON.parse(JSON.stringify(np)); delete np.aiPrev; for(const [k,b] of Object.entries(BUILTIN_LOGOS)) if(np.logo && np.logo===b.data){ np.logo = "builtin:"+k; delete np.logoAR; delete np.logoDark; }
-      let i = np.id ? PROFS.profiles.findIndex(p => p.id===np.id) : -1; if(i < 0) i = PROFS.profiles.findIndex(p => norm(p.name)===norm(np.name));   // merge: same id, else same name
-      if(i >= 0){ const cur = PROFS.profiles[i]; const v = {...cur, ...np, id: cur.id, builtin: !!cur.builtin, d: {...(cur.d||{}), ...(np.d||{})}}; PROFS.profiles[i] = v; updated++; }
-      else { const id = (np.id && !PROFS.profiles.some(p => p.id===np.id)) ? np.id : newId(); PROFS.profiles.push({...np, id, builtin:false, d:{legal:"",address:"",phone:"",email:"",website:"",coreg:"",vat:"",extra:"", ...(np.d||{})}}); added++; } });
-    if(!added && !updated) throw new Error("no companies with a name in this file");
-    if(!profSave()){ PROFS = JSON.parse(backup); renderSettings(); return; }
-    renderSettings(); renderProfSel(); applyTheme(); status(`Imported companies: ${added} added, ${updated} updated.`, "ok"); }
-  catch(err){ alert("That file isn't a companies file (frb-companies.json): "+err.message); } });
+  try{ const d = JSON.parse(await f.text()), list = d.profiles || (d.id ? [d] : []); if(!list.length) throw new Error("no profiles in file");
+    let added = 0, replaced = 0;
+    list.forEach(np => { if(!np.id || !np.name) return; const i = PROFS.profiles.findIndex(p => p.id===np.id);
+      const b = BUILTIN_PROFILES.find(x => x.id===np.id); const v = {...np, builtin: !!b};
+      if(i >= 0){ PROFS.profiles[i] = v; replaced++; } else { PROFS.profiles.push(v); added++; } });
+    profSave(); renderSettings(); applyTheme(); status(`Imported profiles: ${added} added, ${replaced} updated.`); }
+  catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
 $("#colApply").onclick = applyColours;
-window.BRE = { sha256Fallback: s => sha256Fallback(s), get signedIn(){ return signedInEmail(); }, signOut: () => signOut(), get pending(){return PEND;}, revertPending, applyColours, get state(){return S;}, aiMatchColours, runAIMatch, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+window.BRE = { get pending(){return PEND;}, revertPending, applyColours, get state(){return S;}, aiMatchColours, runAIMatch, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
 histLoad(); AC_FIELDS.forEach(k => attachAC(document.querySelector(`[data-k=${k}]`), k)); attachAC($("#descHeading"), "heading");
-/* ---------- v18: sign-in gate (email + access code; only a SHA-256 hash of the code is kept here) ---------- */
-const AUTH_HASH = "5cb601e2bd1651cc96a591805e14fbc30a6f19a5aafb8681083de5e06a864b6d", SESSION_KEY = "bre_session_v1", LAST_EMAIL_KEY = "bre_last_email_v1";
-function sha256Fallback(str){ // small pure-JS SHA-256 for browsers without crypto.subtle (e.g. some file:// pages)
-  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-  const b = Array.from(new TextEncoder().encode(str)), l = b.length*8; b.push(0x80); while(b.length%64!==56) b.push(0);
-  for(let i=7;i>=0;i--) b.push(i>3 ? 0 : (l>>>(i*8))&255);
-  let h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]; const w = new Array(64), r = (x,n) => (x>>>n)|(x<<(32-n));
-  for(let o=0;o<b.length;o+=64){ for(let i=0;i<16;i++) w[i] = (b[o+i*4]<<24)|(b[o+i*4+1]<<16)|(b[o+i*4+2]<<8)|b[o+i*4+3];
-    for(let i=16;i<64;i++){ const s0 = r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3), s1 = r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10); w[i] = (w[i-16]+s0+w[i-7]+s1)|0; }
-    let [a,bb,c,d,e,f,g,hh] = h;
-    for(let i=0;i<64;i++){ const t1 = (hh+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+K[i]+w[i])|0, t2 = ((r(a,2)^r(a,13)^r(a,22))+((a&bb)^(a&c)^(bb&c)))|0;
-      hh=g; g=f; f=e; e=(d+t1)|0; d=c; c=bb; bb=a; a=(t1+t2)|0; }
-    h = h.map((v,i) => (v+[a,bb,c,d,e,f,g,hh][i])|0); }
-  return h.map(v => (v>>>0).toString(16).padStart(8,"0")).join(""); }
-async function sha256Hex(str){ try{ if(window.crypto && crypto.subtle && crypto.subtle.digest){ const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)); return Array.from(new Uint8Array(d)).map(x => x.toString(16).padStart(2,"0")).join(""); } }catch(e){}
-  return sha256Fallback(str); }
-const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
-function signedInEmail(){ try{ return sessionStorage.getItem(SESSION_KEY) || ""; }catch(e){ return ""; } }
-function renderGate(){ const who = signedInEmail();
-  $("#signin").hidden = !!who; $("#welcomeMain").hidden = !who; $("#btnSignOut").hidden = !who;
-  $("#whoAmI").innerHTML = who ? `Signed in as <b></b> · <button class="lnk" id="whoOut" type="button">Sign out</button>` : "";
-  if(who){ $("#whoAmI b").textContent = who; $("#whoOut").onclick = signOut; $("#btnSignOut").title = `Sign out (${who})`; }
-  else { let last = ""; try{ last = localStorage.getItem(LAST_EMAIL_KEY) || ""; }catch(e){} if(!$("#siEmail").value) $("#siEmail").value = last; $("#siPass").value = "";
-    setTimeout(() => (last ? $("#siPass") : $("#siEmail")).focus(), 30); } }
-$("#signin").addEventListener("submit", async e => { e.preventDefault(); const email = $("#siEmail").value.trim(), code = $("#siPass").value.trim(), err = $("#signinErr");
-  $("#siEmail").classList.remove("bad"); $("#siPass").classList.remove("bad"); err.textContent = "";
-  if(!validEmail(email)){ err.textContent = "Please enter a valid email address (e.g. name@company.co.za)."; $("#siEmail").classList.add("bad"); $("#siEmail").focus(); return; }
-  if(!code){ err.textContent = "Please enter the access code."; $("#siPass").classList.add("bad"); $("#siPass").focus(); return; }
-  $("#siBtn").disabled = true; const ok = (await sha256Hex(code)) === AUTH_HASH; $("#siBtn").disabled = false;
-  if(!ok){ err.textContent = "Wrong access code – please check the code you were given and try again."; $("#siPass").classList.add("bad"); $("#siPass").value = ""; $("#siPass").focus(); return; }
-  try{ sessionStorage.setItem(SESSION_KEY, email); localStorage.setItem(LAST_EMAIL_KEY, email); }catch(e){}
-  renderGate(); $("#welcomeStart").focus(); });
-function signOut(){ if(hasContent() && DIRTY && !confirm("Sign out? Changes that are not saved (Save report or Create Report) will be lost.")) return;
-  revertPending(true); try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
-  S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report");
-  $("#prevs").hidden = true; $("#welcome").hidden = false; $("#signinErr").textContent = ""; renderGate(); status("Signed out."); }
-$("#btnSignOut").onclick = signOut;
-function hideWelcome(){ if(!signedInEmail()){ renderGate(); return; } $("#welcome").hidden = true; }
-$("#welcomeStart").onclick = () => { if(!signedInEmail()){ renderGate(); return; } S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); hideWelcome(); window.scrollTo(0,0);
+function hideWelcome(){ $("#welcome").hidden = true; }
+$("#welcomeStart").onclick = () => { S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); hideWelcome(); window.scrollTo(0,0);
   setTimeout(() => $("#profSel").focus(), 50); };
-$("#welcomeOpen").onclick = () => { if(signedInEmail()) $("#draftFile").click(); };
+$("#welcomeOpen").onclick = () => $("#draftFile").click();
 window.BRE_READY = (async function start(){
   clearOldAutosave();               // remove leftovers from v3/v4 autosave so they never come back
   S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false;
-  renderFields(); renderPhotos(); applyTheme(); renderGate();
+  renderFields(); renderPhotos(); applyTheme();
   window.BRE_RESTORED = true;
 })();
 window.addEventListener("beforeunload", e => { if(DIRTY && hasContent()){ e.preventDefault(); e.returnValue = ""; } });
