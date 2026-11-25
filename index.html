@@ -45,7 +45,7 @@ textarea{resize:vertical;min-height:70px}
 .photos{display:flex;flex-direction:column;gap:10px}
 .ph{display:grid;grid-template-columns:34px 220px 1fr 130px;gap:14px;align-items:stretch;border:1.5px solid var(--line);border-left:5px solid var(--gold);border-radius:10px;padding:10px;background:#fff}
 .ph.dragging{opacity:.4}.ph.dropt{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy)}
-.ph .num{font-weight:800;color:var(--navy);font-size:18px;text-align:center;cursor:grab;user-select:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ph .num{font-weight:800;color:var(--navy);font-size:18px;text-align:center;cursor:move;user-select:none;display:flex;flex-direction:column;align-items:center;gap:4px}
 .ph .num small{font-size:10px;color:var(--grey);font-weight:600}
 .ph .thumb{width:220px;height:150px;background:var(--light);border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;position:relative}
 .ph .thumb img{max-width:100%;max-height:100%}
@@ -699,8 +699,8 @@ function renderPhotos(){
     if(i>=2 && (i-2)%S.perPage===0){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent=`Page ${3+(i-2)/S.perPage}`; box.append(pb); }
     if(i===1){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent="Page 2"; box.append(pb); }
     if(i===0){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent="Page 1 – cover"; box.append(pb); }
-    const el = document.createElement("div"); el.className="ph"; el.draggable = true; el.dataset.i = i;
-    el.innerHTML = `<div class="num" title="Drag to reorder">${i+1}<small>⠿ drag</small></div>
+    const el = document.createElement("div"); el.className="ph"; el.draggable = true; el.title = "Drag to reorder"; el.dataset.i = i;
+    el.innerHTML = `<div class="num" title="Drag to reorder">${i+1}</div>
       <div class="thumb" title="Click to mark damage (arrows, circles, boxes, text)"><img alt=""><button class="mark">➜ Mark damage</button></div>
       <div><div class="dl"><b>Description</b><span class="where"></span></div><textarea class="desc" placeholder="Describe this photo, e.g. Yoke sealing area worn. To be repaired."></textarea></div>
       <div class="acts"><button class="btn sm up">▲ Up</button><button class="btn sm dn">▼ Down</button><button class="btn sm danger del">🗑 Delete</button></div>`;
