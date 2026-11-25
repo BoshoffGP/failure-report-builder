@@ -5,6 +5,7 @@ A single-file web app that creates failure reports (PowerPoint `.pptx`) from pho
 - **Home screen:** **Create Report** starts a new blank report. **Previous reports** lists every report created or saved, newest first, with search, a thumbnail, **Open** and **Delete**.
 - **Dashboard:** choose the company at the top of Job details, upload photos, add descriptions and damage marks, and fill in the job form. The heading beside the photos defaults to DESCRIPTION; you can pick COMMENTS or type your own, which is remembered.
 - **Top bar:** **New report** clears the current report. **Save report** saves the editable report (`.json` with photos, descriptions, marks, company and heading) to a folder you choose (Chrome/Edge "Save as" dialog; other browsers download it) and keeps it in Previous reports. **Create Report** downloads the `.pptx` and keeps a full copy in Previous reports. Re-creating a report you opened updates its entry. ⌂ (or the title) goes back to Home.
+- **✨ AI colour match (Settings → Colour scheme):** optional per company. When switched on, the logo is analysed on this computer (no internet, nothing uploaded) and the accent colour, dark colour and header style are set to match it, with contrast checked for readable header text. It re-matches when you upload a new logo or click **↻ Re-match**. Changing a colour by hand switches it off.
 
 ## Link
 

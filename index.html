@@ -176,6 +176,21 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 .colf input[type=color]{width:52px;height:42px;border:1.5px solid var(--line);border-radius:7px;padding:2px;background:#fff;cursor:pointer}
 .colf input[type=text]{width:110px;font-family:Consolas,monospace;text-transform:uppercase}
 .sugg{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.aibox{margin:14px 0 4px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:linear-gradient(135deg,#F8FAFF,#FFF);display:flex;flex-direction:column;gap:8px}
+.aibox.on{border-color:var(--gold);background:linear-gradient(135deg,var(--tint),#FFF)}
+.aibox .aih{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.aibox .ait{font-weight:800;font-size:14.5px;color:var(--ink)}
+.aibox .aisub{font-size:12.5px;color:var(--grey)}
+.aisw{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink);user-select:none}
+.aisw input{position:absolute;opacity:0;width:1px;height:1px}
+.aisw .tr{width:44px;height:24px;border-radius:999px;background:#CBD5E1;position:relative;transition:background .15s;flex-shrink:0}
+.aisw .tr::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+.aisw input:checked + .tr{background:var(--gold)}
+.aisw input:checked + .tr::after{left:23px}
+.aisw input:focus-visible + .tr{outline:2px solid var(--navy);outline-offset:2px}
+.ainote{font-size:13px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ainote .sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);vertical-align:-2px}
+.ainote.warn{color:#B45309}
 .sg{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--grey)}
 .sg .c{width:46px;height:30px;border-radius:6px;border:1px solid var(--line)}
 .sg button{font-size:10px;padding:2px 6px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer}
@@ -324,6 +339,12 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
         <div><div class="hint">Accent (lines, highlights, N/A block)</div><div class="colf"><input type="color" id="cAccent"><input type="text" id="hAccent" maxlength="7"></div></div>
         <div><div class="hint">Dark / secondary (top bars, headers, titles)</div><div class="colf"><input type="color" id="cDark"><input type="text" id="hDark" maxlength="7"></div></div>
         <div><div class="hint">Report header style</div><select data-pk="headerStyle"><option value="auto">Automatic (from logo)</option><option value="light">Light – logo on white</option><option value="band">Dark band – logo on dark colour</option></select></div>
+      </div>
+      <div class="aibox" id="aiBox">
+        <div class="aih"><span class="ait">✨ AI colour match</span><span class="aisub">Analyses the logo on this computer (works offline) and sets the theme colours and header style.</span></div>
+        <div class="aih"><label class="aisw"><input type="checkbox" id="aiToggle"><span class="tr"></span><span>Automatically match theme colours to logo</span></label>
+          <button class="btn sm" id="aiRematch">↻ Re-match</button></div>
+        <div class="ainote" id="aiNote"></div>
       </div>
       <div class="toolbar"><button class="btn sm" id="pPick">🎨 Pick colours from logo</button><span class="hint">Click a suggested colour to use it.</span></div>
       <div class="sugg" id="pSugg"></div>
@@ -1188,7 +1209,7 @@ function renderPList(){
     el.onclick = () => { SEL = p.id; renderSettings(); }; box.append(el); });
 }
 let lastSettingsSel = null;
-function renderSettings(){ if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; resetProfState(); }
+function renderSettings(){ if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; resetProfState(); } setTimeout(renderAI, 0);
   const p = selProf(); renderPList();
   $$("[data-pk]").forEach(el => { const v = getK(p, el.dataset.pk); if(el.type==="checkbox") el.checked = !!v; else el.value = v ?? (el.dataset.pk==="headerStyle" ? "auto" : ""); });
   $("#cAccent").value = "#"+(hx(p.accent)||"F0B429"); $("#hAccent").value = "#"+(hx(p.accent)||"F0B429");
@@ -1244,7 +1265,8 @@ $("#pLogoBtn").onclick = () => $("#pLogoFile").click();
 $("#pLogoFile").addEventListener("change", async e => { const f = e.target.files[0]; e.target.value = ""; if(!f) return;
   try{ busy(true,"Reading logo…"); const r = await processLogo(await readFile(f), $("#pTrim").checked); busy(false);
     const p = selProf(); const old = {logo:p.logo, logoAR:p.logoAR, logoDark:p.logoDark}; Object.assign(p, {logo:r.data, logoAR:r.ar, logoDark:r.dark});
-    if(!profSave()){ Object.assign(p, old); return; } renderSettings(); profChanged(); status("Logo updated – use 🎨 Pick colours from logo to match the colours."); }
+    if(!profSave()){ Object.assign(p, old); return; } renderSettings(); profChanged();
+    if(p.aiMatch) await runAIMatch(true); else status("Logo updated – turn on ✨ AI colour match, or use 🎨 Pick colours from logo."); }
   catch(err){ busy(false); alert("Could not read that image: "+err.message); } });
 async function logoColours(src){
   const im = await loadImg(src), c = document.createElement("canvas"), n = 240; c.width = n; c.height = Math.max(1, Math.round(n/((im.naturalWidth/im.naturalHeight)||1)));
@@ -1254,6 +1276,76 @@ async function logoColours(src){
   cols.forEach(c => { if(out.length < 8 && !out.some(o => rgbDist(o.hex,c.hex) < 60)) out.push(c); });
   return out.filter(c => !(lum(c.hex) > 0.9));
 }
+/* ---------- ✨ AI colour match (on-device): k-means palette → accent / dark / header style, WCAG-checked ---------- */
+const satOf = h => { const [r,g,b] = rgbOf(h).map(v=>v/255), mx = Math.max(r,g,b), mn = Math.min(r,g,b), l = (mx+mn)/2; return mx===mn ? 0 : (mx-mn)/(1-Math.abs(2*l-1)); };
+const chromaOf = h => { const [r,g,b] = rgbOf(h); return (Math.max(r,g,b)-Math.min(r,g,b))/255; };
+function hslShade(h, L){ // same hue/saturation, new lightness (0..1)
+  let [r,g,b] = rgbOf(h).map(v=>v/255); const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let H=0, S=0, l=(mx+mn)/2;
+  if(mx!==mn){ const d=mx-mn; S = l>0.5 ? d/(2-mx-mn) : d/(mx+mn); H = mx===r ? (g-b)/d+(g<b?6:0) : mx===g ? (b-r)/d+2 : (r-g)/d+4; H/=6; }
+  const q = L<0.5 ? L*(1+S) : L+S-L*S, p = 2*L-q, f = t => { t<0&&(t+=1); t>1&&(t-=1); return t<1/6 ? p+(q-p)*6*t : t<1/2 ? q : t<2/3 ? p+(q-p)*(2/3-t)*6 : p; };
+  return S===0 ? hexOf([L*255,L*255,L*255]) : hexOf([f(H+1/3)*255, f(H)*255, f(H-1/3)*255]); }
+async function aiMatchColours(src){
+  const im = await loadImg(src), W = 220, Hh = Math.max(8, Math.round(W/((im.naturalWidth/im.naturalHeight)||1)));
+  const c = document.createElement("canvas"); c.width = W; c.height = Hh; const g = c.getContext("2d"); g.drawImage(im,0,0,W,Hh);
+  const d = g.getImageData(0,0,W,Hh).data, at = (x,y) => (y*W+x)*4;
+  // background = the colour along the outer edge (or transparent)
+  const edge = []; for(let x=0;x<W;x++){ edge.push(at(x,0), at(x,Hh-1)); } for(let y=0;y<Hh;y++){ edge.push(at(0,y), at(W-1,y)); }
+  const opaqueEdge = edge.filter(i => d[i+3] >= 128), transparent = opaqueEdge.length < edge.length*0.5;
+  const med = k => { const a = opaqueEdge.map(i => d[i+k]).sort((x,y)=>x-y); return a.length ? a[a.length>>1] : 255; };
+  const bgHex = transparent ? null : hexOf([med(0),med(1),med(2)]);
+  const bgLum = bgHex ? lum(bgHex) : 1, bgDark = !!bgHex && bgLum < 0.2;
+  // logo pixels: opaque, not background, not near-white, not low-chroma light noise
+  const pts = [];
+  for(let i=0;i<d.length;i+=4){ if(d[i+3] < 128) continue; const rgb = [d[i],d[i+1],d[i+2]];
+    if(bgHex){ const B = rgbOf(bgHex); if(Math.hypot(rgb[0]-B[0],rgb[1]-B[1],rgb[2]-B[2]) < 48) continue; }
+    const mx = Math.max(...rgb), mn = Math.min(...rgb), ch = (mx-mn)/255, L = (mx+mn)/510;
+    if(L > 0.86 && ch < 0.18) continue;                 // white / near-white
+    if(ch < 0.12 && L > 0.30 && L < 0.86) continue;     // mid/light greys (anti-aliasing, shadows)
+    pts.push(rgb); }
+  if(pts.length < 30) return null;
+  // k-means (k up to 6), deterministic farthest-point seeding
+  const K = Math.min(6, pts.length), dist2 = (a,b) => (a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2, step = Math.max(1, Math.floor(pts.length/4000)), S = pts.filter((_,i)=>i%step===0);
+  const cen = [S[0].slice()]; while(cen.length < K){ let best = null, bd = -1; for(const p of S){ const m = Math.min(...cen.map(c=>dist2(p,c))); if(m > bd){ bd = m; best = p; } } if(bd < 400) break; cen.push(best.slice()); }
+  let asg = new Array(S.length).fill(0);
+  for(let it=0; it<14; it++){ const acc = cen.map(()=>[0,0,0,0]);
+    S.forEach((p,i) => { let bi = 0, bv = Infinity; cen.forEach((c,j) => { const v = dist2(p,c); if(v < bv){ bv = v; bi = j; } }); asg[i] = bi; acc[bi][0]+=p[0]; acc[bi][1]+=p[1]; acc[bi][2]+=p[2]; acc[bi][3]++; });
+    acc.forEach((a,j) => { if(a[3]) cen[j] = [a[0]/a[3], a[1]/a[3], a[2]/a[3]]; }); }
+  const cnt = cen.map(()=>0); asg.forEach(j => cnt[j]++);
+  const pal = cen.map((c,j) => ({hex:hexOf(c), share:cnt[j]/S.length})).filter(x => x.share >= 0.015).sort((a,b)=>b.share-a.share);
+  // accent: most prominent saturated brand colour
+  const sat = pal.filter(x => chromaOf(x.hex) >= 0.28 && lum(x.hex) > 0.03);
+  let accent, accentFrom = "logo";
+  if(sat.length) accent = sat.slice().sort((a,b) => (Math.sqrt(b.share)*chromaOf(b.hex)) - (Math.sqrt(a.share)*chromaOf(a.hex)))[0].hex;
+  else { accent = (pal.find(x => lum(x.hex) > 0.05 && lum(x.hex) < 0.6) || pal[0]).hex; accentFrom = "neutral logo"; }
+  // dark: background if the logo sits on a dark colour, else darkest strong colour, else darkened accent
+  let dark, darkFrom;
+  const darks = pal.filter(x => lum(x.hex) < 0.06 && x.share >= 0.03 && rgbDist(x.hex, accent) > 60);
+  if(bgDark){ dark = bgHex; darkFrom = "logo background"; }
+  else if(darks.length){ dark = darks.slice().sort((a,b) => (b.share*(1-lum(b.hex)*8)) - (a.share*(1-lum(a.hex)*8)))[0].hex; darkFrom = "logo"; }
+  else { dark = hslShade(accent, 0.16); darkFrom = "darkened accent"; }
+  // WCAG: white header text on the dark bars must reach 4.5:1 – darken until it does
+  let guard = 0; while(contrast(dark,"FFFFFF") < 4.5 && guard++ < 40) dark = mix(dark,"000000",0.08);
+  // accent must stand apart from the dark bars (≥ 2:1) so lines/blocks stay visible
+  guard = 0; while(contrast(accent, dark) < 2 && guard++ < 30) accent = lum(dark) < 0.2 ? mix(accent,"FFFFFF",0.06) : mix(accent,"000000",0.06);
+  return { accent, dark, headerStyle: bgDark ? "band" : "light", palette: pal.map(x=>x.hex), bg: bgHex, transparent, darkFrom, accentFrom,
+           contrastHeader: +contrast(dark,"FFFFFF").toFixed(1), contrastAccent: +contrast(accent,dark).toFixed(1) }; }
+function aiNoteHTML(p){ const r = p.aiResult; if(!r) return "";
+  return `<span>Matched from logo: accent <b><span class="sw" style="background:#${r.accent}"></span>#${r.accent}</b>, dark <b><span class="sw" style="background:#${r.dark}"></span>#${r.dark}</b> · header: ${r.headerStyle==="band" ? "dark band" : "light (logo on white)"}${r.darkFrom==="darkened accent" ? " · dark made from the accent" : ""} · text contrast ${r.contrastHeader}:1</span>`; }
+function renderAI(){ const p = selProf(); if(!p || !$("#aiToggle")) return; $("#aiToggle").checked = !!p.aiMatch; $("#aiBox").classList.toggle("on", !!p.aiMatch);
+  $("#aiRematch").disabled = !p.aiMatch; const n = $("#aiNote"); n.className = "ainote";
+  if(p.aiMatch) n.innerHTML = aiNoteHTML(p) || (logoOf(p) ? "" : "Upload a logo and the colours will be matched automatically.");
+  else n.innerHTML = p.aiOffHint ? `<span>${p.aiOffHint}</span>` : '<span class="aisub">Off – colours are set by hand below.</span>'; if(!p.aiMatch && p.aiOffHint) n.classList.add("warn"); }
+async function runAIMatch(quiet){ const p = selProf(), lg = logoOf(p); if(!lg){ renderAI(); if(!quiet) status("Upload a logo first – then AI colour match can read it."); return null; }
+  busy(true, "✨ Matching colours to the logo…"); let r = null; try{ r = await aiMatchColours(lg.data); }catch(e){ r = null; } busy(false);
+  if(!r){ $("#aiNote").innerHTML = "<span>Could not find clear colours in this logo – set them by hand.</span>"; $("#aiNote").className = "ainote warn"; return null; }
+  p.accent = r.accent; p.dark = r.dark; p.headerStyle = r.headerStyle; delete p.accentText; p.aiResult = r; delete p.aiOffHint;
+  renderSettings(); profChanged(); renderAI(); status(`✨ Colours matched to the logo: accent #${r.accent}, dark #${r.dark}.`, "ok"); return r; }
+function aiManualOverride(){ const p = selProf(); if(p && p.aiMatch){ p.aiMatch = false; p.aiOffHint = "AI colour match switched off because you changed a colour by hand. Turn it on again to re-match."; profSave(); renderAI(); } }
+$("#aiToggle").addEventListener("change", async e => { const p = selProf(); p.aiMatch = e.target.checked; delete p.aiOffHint; profSave(); renderAI();
+  if(p.aiMatch) await runAIMatch(); else { profChanged(); } });
+$("#aiRematch").onclick = () => runAIMatch();
+["#cAccent","#hAccent","#cDark","#hDark"].forEach(id => $(id).addEventListener("input", aiManualOverride, true));
+document.querySelector('[data-pk="headerStyle"]').addEventListener("change", aiManualOverride, true);
 $("#pPick").onclick = async () => { const p = selProf(), lg = logoOf(p); if(!lg){ alert("Upload a logo first."); return; }
   const cols = await logoColours(lg.data), box = $("#pSugg"); box.innerHTML = "";
   if(!cols.length){ box.textContent = "No clear colours found."; return; }
@@ -1263,10 +1355,10 @@ $("#pPick").onclick = async () => { const p = selProf(), lg = logoOf(p); if(!lg)
   const rest = cand.filter(c => c.hex!==bestDark), pool = rest.length ? rest : cand;
   const bestAccent = pool.slice().sort((a,b) => sat(b.hex)*Math.sqrt(b.n) - sat(a.hex)*Math.sqrt(a.n))[0].hex;  // most colourful
   const sug = document.createElement("div"); sug.className = "sg"; sug.innerHTML = `<button class="btn sm gold" style="font-size:12px">Use suggested: accent #${bestAccent} + dark #${bestDark}</button>`;
-  sug.querySelector("button").onclick = () => { p.accent = bestAccent; p.dark = bestDark; delete p.accentText; renderSettings(); profChanged(); }; box.append(sug);
+  sug.querySelector("button").onclick = () => { aiManualOverride(); p.accent = bestAccent; p.dark = bestDark; delete p.accentText; renderSettings(); profChanged(); }; box.append(sug);
   cols.forEach(c => { const el = document.createElement("div"); el.className = "sg";
     el.innerHTML = `<div class="c" style="background:#${c.hex}"></div>#${c.hex}<button data-k="accent">accent</button><button data-k="dark">dark</button>`;
-    el.querySelectorAll("button").forEach(b => b.onclick = () => { p[b.dataset.k] = c.hex; if(b.dataset.k==="accent") delete p.accentText; renderSettings(); profChanged(); }); box.append(el); });
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { aiManualOverride(); p[b.dataset.k] = c.hex; if(b.dataset.k==="accent") delete p.accentText; renderSettings(); profChanged(); }); box.append(el); });
   box.dataset.accent = bestAccent; box.dataset.dark = bestDark;
 };
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -1296,7 +1388,7 @@ $("#pFile").addEventListener("change", async e => { const f = e.target.files[0];
   catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
-window.BRE = { get state(){return S;}, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+window.BRE = { get state(){return S;}, aiMatchColours, runAIMatch, saveReport, reportFileName, openReportFile, newReport, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
