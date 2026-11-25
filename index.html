@@ -21,7 +21,7 @@ header.top .sp{flex:1}
 .btn.sm{padding:6px 10px;font-size:13px;border-width:1px}
 .btn.danger{color:var(--red)}
 .btn:disabled{opacity:.5;cursor:default}
-main{max-width:1180px;margin:0 auto;padding:22px 20px 120px}
+main{max-width:1180px;margin:0 auto;padding:22px 20px 48px}
 section.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:22px;overflow:hidden}
 section.card>h2{margin:0;background:var(--navy);color:var(--on-dark);font-size:17px;padding:12px 20px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--gold)}
 section.card>h2 .n{background:var(--gold);color:var(--on-accent);border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
@@ -65,8 +65,22 @@ textarea{resize:vertical;min-height:70px}
 .lst .row{display:flex;gap:6px}.lst .row input{flex:1;min-width:0}
 .lst .row button{width:38px;border:1.5px solid var(--line);background:#fff;border-radius:7px;color:var(--red);font-size:18px;cursor:pointer}
 .lst .add{margin:0 10px 10px;width:calc(100% - 20px)}
-.bottombar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:3px solid var(--gold);padding:12px 24px;display:flex;gap:12px;align-items:center;z-index:20;box-shadow:0 -2px 10px rgba(0,0,0,.08)}
-.bottombar .sp{flex:1}.status{color:var(--grey);font-size:14px}
+.status{font-size:12px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;margin-top:2px}
+header.top .acts{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;flex-shrink:0}
+header.top .acts .btn{white-space:nowrap}
+header.top .tabs{flex-shrink:0}.tab{white-space:nowrap}
+@media (max-width:1180px){header.top{gap:12px;padding:8px 14px}header.top img{height:44px}header.top h1{font-size:18px}.tab{padding:8px 11px;font-size:14px}header.top .btn.sm{padding:6px 8px}header.top .btn.create{padding:8px 13px;font-size:14px}.status{max-width:230px}}
+header.top .btn.create{padding:9px 18px;font-size:15px;border-width:2px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+/* welcome screen – neutral, no company branding */
+#welcome{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;
+  background:radial-gradient(1200px 700px at 50% 35%,#2B3442 0%,#1B2230 55%,#121722 100%);color:#F3F4F6;font-family:"Segoe UI",Calibri,Arial,sans-serif;text-align:center;padding:24px}
+#welcome[hidden]{display:none}
+#welcome h1{margin:0;font-size:clamp(34px,5.2vw,60px);font-weight:700;letter-spacing:.5px}
+#welcome .rule{width:84px;height:3px;background:#9CA3AF;border-radius:2px;margin:-14px auto 0;opacity:.6}
+#welcome .go{font-size:21px;font-weight:700;padding:18px 46px;border-radius:12px;border:0;cursor:pointer;background:#F3F4F6;color:#111827;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#welcome .go:hover{background:#fff;transform:translateY(-1px)}
+#welcome .lnk{background:none;border:0;color:#9CA3AF;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#welcome .lnk:hover{color:#E5E7EB}
 .modal{position:fixed;inset:0;background:rgba(10,15,30,.75);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:12px;padding:16px;max-width:95vw;max-height:95vh;display:flex;flex-direction:column;gap:10px}
@@ -100,9 +114,10 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 .tabs{display:flex;gap:6px;margin-left:10px}
 .tab{border:2px solid transparent;background:transparent;color:var(--on-dark);font-weight:700;font-size:15px;padding:9px 16px;border-radius:8px;cursor:pointer;opacity:.8}
 .tab.on{background:var(--gold);color:var(--on-accent);opacity:1}
-.profbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--tint);border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px;margin-bottom:16px}
-.profbar img{height:34px;max-width:160px;object-fit:contain;border-radius:4px}
-.profbar select{min-width:260px;font-weight:700}
+.profbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--tint);border:2px solid var(--gold);border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.profbar .pl{font-size:16px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.4px}
+.profbar img{height:42px;max-width:190px;object-fit:contain;border-radius:4px}
+.profbar select{min-width:300px;font-weight:700;font-size:16px;padding:10px 12px}
 .set{display:grid;grid-template-columns:300px 1fr;gap:20px}
 .plist{display:flex;flex-direction:column;gap:8px}
 .pitem{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;background:#fff}
@@ -140,20 +155,27 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 </style>
 </head>
 <body>
+<div id="welcome">
+  <h1>Failure Report Builder</h1><div class="rule"></div>
+  <button class="go" id="welcomeStart">Create Report</button>
+  <button class="lnk" id="welcomeOpen">or open a saved draft…</button>
+</div>
 <header class="top">
   <img id="hdrLogo" alt="Company logo">
-  <div><h1>FAILURE REPORT BUILDER</h1><div class="sub" id="hdrSub">fill in, add photos, click Create Report</div></div>
+  <div style="min-width:0"><h1>FAILURE REPORT BUILDER</h1><div class="sub" id="hdrSub">fill in, add photos, click Create Report</div><div class="status" id="status">Ready.</div></div>
   <div class="tabs"><button class="tab on" data-tab="report">📝 Report</button><button class="tab" data-tab="settings">⚙ Settings</button></div>
   <div class="sp"></div>
-  <button class="btn sm" id="btnLists">★ Saved lists</button>
+  <div class="acts">
   <button class="btn sm" id="btnNew">New report</button>
   <button class="btn sm" id="btnLoad">Open draft…</button>
   <button class="btn sm" id="btnSave">Save draft</button>
+  <button class="btn gold create" id="btnCreate">Create Report</button>
+  </div>
   <input type="file" id="draftFile" accept=".json,application/json" hidden>
 </header>
 <main id="reportView">
 <section class="card"><h2><span class="n">1</span>Job details</h2><div class="body">
-  <div class="profbar"><b style="color:var(--ink)">Company on this report:</b> <img id="pbLogo" alt=""><select id="profSel"></select>
+  <div class="profbar"><span class="pl">Company for this report</span> <img id="pbLogo" alt=""><select id="profSel"></select>
     <button class="btn sm" id="pbEdit">⚙ Edit company / colours</button></div>
   <div class="grid">
     <label class="f">Job number<input type="text" data-k="job" placeholder="e.g. BRE1220"></label>
@@ -270,13 +292,16 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
     </div>
   </div>
 </div></section>
+<section class="card"><h2><span class="n">⇅</span>Drop-down history – backup / move to another PC</h2><div class="body">
+  <p class="hint" style="margin-top:0">Everything you type (clients, components, artisans, descriptions, list items…) is remembered automatically and offered in the drop-downs. It is stored in this browser only. Export it to back it up or to load it on another PC or at another link.</p>
+  <div class="toolbar">
+    <button class="btn sm" id="mgrExport">⬇ Export drop-down history…</button>
+    <button class="btn sm" id="mgrImport">⬆ Import drop-down history…</button>
+    <input type="file" id="mgrFile" accept=".json,application/json" hidden>
+  </div>
+</div></section>
 </main>
 
-<div class="bottombar">
-  <span class="status" id="status">Ready.</span><div class="sp"></div>
-  <button class="btn" id="btnSave2">Save draft</button>
-  <button class="btn gold big" id="btnCreate">Create Report</button>
-</div>
 
 <div class="modal" id="editor"><div class="box">
   <div class="mt"><b style="color:var(--navy);font-size:17px">Mark damage / wear</b><span class="hint" id="edHint">Drag on the photo to draw. Arrow head goes where you let go.</span></div>
@@ -310,9 +335,6 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <div class="hint" style="background:var(--tint);border:1px solid var(--gold);border-radius:8px;padding:8px 10px">These lists are stored in this browser for this file's location. Keep the builder file in one place (e.g. Desktop) and use the same browser. Use <b>Export</b> to back them up or move them to another PC, and <b>Import</b> to load them.</div>
   <div id="mgrBody" style="overflow:auto;max-height:58vh"></div>
   <div class="mt">
-    <button class="btn sm" id="mgrExport">⬇ Export lists…</button>
-    <button class="btn sm" id="mgrImport">⬆ Import lists…</button>
-    <input type="file" id="mgrFile" accept=".json,application/json" hidden>
     <button class="btn sm" id="mgrSeed">Re-add starter entries</button>
     <div style="flex:1"></div>
     <button class="btn navy" id="mgrClose">Close</button>
@@ -469,7 +491,7 @@ function applyTheme(){
   r.setProperty("--na-fill", H(T.naFill)); r.setProperty("--na-text", H(T.naText));
   const lg = T.logo; $("#hdrLogo").src = lg ? lg.data : ""; $("#hdrLogo").style.background = lg && lg.dark ? H(T.dark) : "#fff";
   $("#pbLogo").src = lg ? lg.data : ""; $("#pbLogo").style.background = lg && lg.dark ? H(T.dark) : "transparent";
-  $("#hdrSub").textContent = `${p.name} · fill in, add photos, click Create Report`;
+  $("#hdrSub").textContent = p.name;
   renderProfSel();
 }
 function renderProfSel(){ const sel = $("#profSel"); sel.innerHTML = "";
@@ -774,12 +796,11 @@ function renderMgr(){
     if(!list.length) ch.innerHTML = '<span class="hint">Nothing saved yet.</span>';
     body.append(g); });
 }
-$("#btnLists").onclick = () => { renderMgr(); $("#mgr").classList.add("show"); };
 $("#mgrClose").onclick = () => $("#mgr").classList.remove("show");
-$("#mgrExport").onclick = () => { download(new Blob([JSON.stringify({app:"BRE Failure Report Builder – saved lists", version:1, saved:new Date().toISOString(), lists:H}, null, 1)],{type:"application/json"}), "BlackRock_saved_lists.json"); status("Saved lists exported to your Downloads folder."); };
+$("#mgrExport").onclick = () => { download(new Blob([JSON.stringify({app:"BRE Failure Report Builder – saved lists", version:1, saved:new Date().toISOString(), lists:H}, null, 1)],{type:"application/json"}), "Dropdown_history.json"); status("Drop-down history exported to your Downloads folder."); };
 $("#mgrImport").onclick = () => $("#mgrFile").click();
 $("#mgrFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  try{ const d = JSON.parse(await f.text()); histMerge(d.lists || d, false); renderMgr(); status(`Imported saved lists from ${f.name}.`); }catch(err){ alert("That file isn't a saved-lists file: "+err.message); } });
+  try{ const d = JSON.parse(await f.text()); histMerge(d.lists || d, false); status(`Imported drop-down history from ${f.name}.`); }catch(err){ alert("That file isn't a saved-lists file: "+err.message); } });
 $("#mgrSeed").onclick = () => { histMerge(SEED, true); renderMgr(); };
 
 /* ---------- drafts ---------- */
@@ -797,10 +818,10 @@ async function applyDraft(d){
   busy(true,"Opening draft…"); for(const p of S.photos) await refreshThumb(p); busy(false);
   renderFields(); renderPhotos(); applyTheme(); DIRTY = false;
 }
-$("#btnSave").onclick = $("#btnSave2").onclick = saveDraft;
+$("#btnSave").onclick = saveDraft;
 $("#btnLoad").onclick = () => $("#draftFile").click();
 $("#draftFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  try{ await applyDraft(JSON.parse(await f.text())); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
+  try{ await applyDraft(JSON.parse(await f.text())); hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
 $("#btnNew").onclick = () => { if(hasContent() && DIRTY && !confirm("Start a new blank report? Anything not saved as a draft will be cleared.")) return; S = blankState(); DIRTY = false; renderFields(); renderPhotos(); applyTheme(); status("New blank report."); };
 function busy(on, t){ $("#busy").classList.toggle("show", on); if(t) $("#busy").textContent = t; }
 
@@ -1002,7 +1023,7 @@ $("#btnCreate").onclick = createReport;
 
 /* ---------- tabs & settings ---------- */
 function showTab(t){ $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t)); $("#reportView").hidden = t!=="report"; $("#settingsView").hidden = t!=="settings";
-  document.querySelector(".bottombar").style.display = t==="report" ? "" : "none"; if(t==="settings"){ if(!PROFS.profiles.some(p=>p.id===SEL)) SEL = profById(S.profileId).id; renderSettings(); } window.scrollTo(0,0); }
+  if(t==="settings"){ if(!PROFS.profiles.some(p=>p.id===SEL)) SEL = profById(S.profileId).id; renderSettings(); } window.scrollTo(0,0); }
 $$(".tab").forEach(b => b.onclick = () => { if(b.dataset.tab==="settings") SEL = profById(S.profileId).id; showTab(b.dataset.tab); });
 $("#pbEdit").onclick = () => { SEL = profById(S.profileId).id; showTab("settings"); };
 $("#profSel").onchange = e => { S.profileId = e.target.value; applyTheme(); autosave(); status(`Report now uses ${profById(S.profileId).name}.`); };
@@ -1131,6 +1152,10 @@ window.BRE = { get state(){return S;}, hasContent, get dirty(){return DIRTY;}, g
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
 histLoad(); AC_FIELDS.forEach(k => attachAC(document.querySelector(`[data-k=${k}]`), k));
+function hideWelcome(){ $("#welcome").hidden = true; }
+$("#welcomeStart").onclick = () => { S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); hideWelcome(); window.scrollTo(0,0);
+  status("New blank report – choose the company, then fill in the details."); setTimeout(() => $("#profSel").focus(), 50); };
+$("#welcomeOpen").onclick = () => $("#draftFile").click();
 window.BRE_READY = (async function start(){
   clearOldAutosave();               // remove leftovers from v3/v4 autosave so they never come back
   S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false;

@@ -1,6 +1,6 @@
 # Failure Report Builder
 
-A single-file web app that creates failure reports (PowerPoint `.pptx`) from photos and job details. You upload photos, add descriptions and damage marks, fill in the job form and click **Create Report**. The report is generated in the browser and downloaded.
+A single-file web app that creates failure reports (PowerPoint `.pptx`) from photos and job details. It opens on a neutral welcome screen. Click **Create Report** there, choose the company for the report at the top of Job details, upload photos, add descriptions and damage marks, and fill in the job form. Then click **Create Report** in the top bar. The report is generated in the browser and downloaded.
 
 ## Link
 
@@ -30,9 +30,9 @@ Downloading the generated `.pptx` from inside an iframe works in current Chrome,
 ## How it works / data
 
 - **Fully client-side.** There is no server or database. Photos and report data never leave the user's browser. The `.pptx` is built locally (PptxGenJS is bundled in the file).
-- **Each new open is a blank report.** To continue a report later, use **Save draft** (a `.json` file) and **Open draft…**.
+- **Each open starts at the welcome screen with a blank report.** To continue a report later, use **Save draft** (a `.json` file), then **Open draft…** in the top bar or the "open a saved draft" link on the welcome screen.
 - **Company profiles** (logo, colours, details), settings and the remembered drop-down lists are stored in the browser's `localStorage`. That storage is **per browser and per domain**: profiles made on `boshoffgp.github.io` do not show up when the app is served from another URL (for example your own system), or in another browser or PC.
-  - To move them, use **Settings → Export profiles… / Import profiles…** for companies, and **★ Saved lists** (export/import) for the drop-down history.
+  - To move them, use **Settings → Export profiles… / Import profiles…** for companies, and **Settings → Export / Import drop-down history…** for the remembered drop-down entries.
 - Works offline once loaded, and also by just double-clicking the downloaded HTML file.
 
 ## Self-hosting inside your own system
