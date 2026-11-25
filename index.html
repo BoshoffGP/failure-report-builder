@@ -703,7 +703,7 @@ function renderPhotos(){
     el.innerHTML = `<div class="num" title="Drag to reorder">${i+1}<small>⠿ drag</small></div>
       <div class="thumb" title="Click to mark damage (arrows, circles, boxes, text)"><img alt=""><button class="mark">➜ Mark damage</button></div>
       <div><div class="dl"><b>Description</b><span class="where"></span></div><textarea class="desc" placeholder="Describe this photo, e.g. Yoke sealing area worn. To be repaired."></textarea></div>
-      <div class="acts"><button class="btn sm up">▲ Up</button><button class="btn sm dn">▼ Down</button><button class="btn sm edit">➜ Mark damage</button><button class="btn sm danger del">🗑 Delete</button></div>`;
+      <div class="acts"><button class="btn sm up">▲ Up</button><button class="btn sm dn">▼ Down</button><button class="btn sm danger del">🗑 Delete</button></div>`;
     el.querySelector("img").src = thumbs[p.id] || p.data;
     if((p.marks||[]).length){ const b=document.createElement("span"); b.className="cnt"; b.textContent=p.marks.length+" mark"+(p.marks.length>1?"s":""); el.querySelector(".thumb").append(b); }
     el.querySelector(".where").textContent = roleOf(i) + (i===0 ? " · prints under the cover photo" : i===1 ? " · prints under the page 2 photo" : " · prints beside the photo");
@@ -714,7 +714,7 @@ function renderPhotos(){
     el.querySelector(".up").onclick = () => move(i, i-1);
     el.querySelector(".dn").onclick = () => move(i, i+1);
     el.querySelector(".del").onclick = () => { if(confirm("Delete photo "+(i+1)+"?")){ S.photos.splice(i,1); delete thumbs[p.id]; renderPhotos(); autosave(); } };
-    el.querySelector(".edit").onclick = el.querySelector(".thumb").onclick = () => openEditor(p);
+    el.querySelector(".thumb").onclick = () => openEditor(p);   // v9: the gold "Mark damage" button on the photo (and the photo itself) opens the editor
     el.addEventListener("dragstart", e => { if(e.target.closest("textarea")) return; dragFrom = i; el.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain", String(i)); });
     el.addEventListener("dragend", () => { el.classList.remove("dragging"); $$(".ph").forEach(x=>x.classList.remove("dropt")); });
     el.addEventListener("dragover", e => { if(dragFrom!==null){ e.preventDefault(); el.classList.add("dropt"); }});
