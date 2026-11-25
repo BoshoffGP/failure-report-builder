@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213D">
 <title>Failure Report Builder</title>
 <style>
 :root{--navy:#14213D;--gold:#F0B429;--golddk:#B7791F;--on-dark:#FFFFFF;--on-accent:#14213D;--tint:#FFF8E6;--grey:#6B7280;--line:#D9DEE5;--light:#F4F6F8;--ink:#1F2937;--green:#16A34A;--red:#DC2626}
@@ -231,6 +232,145 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 .busy{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:60;font-size:20px;font-weight:700;color:var(--navy)}
 .busy.show{display:flex}
 @media (max-width:900px){.grid,.grid4,.lists{grid-template-columns:1fr}.ph{grid-template-columns:30px 1fr}.ph .acts{flex-direction:row;grid-column:1/-1}}
+
+/* ---------- v24: phone view (desktop look unchanged; everything below only applies to narrow screens) ---------- */
+.mobonly{display:none}
+@media (max-width:1000px){header.top{flex-wrap:wrap}}
+@media (max-width:760px){
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  html,body{overflow-x:clip;max-width:100%}
+  .mobonly{display:revert}.dskonly{display:none}
+  /* header: row 1 = home + logo + title (+ Sign out), row 2 = Report / Settings tabs; actions live in a bottom bar */
+  header.top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:6px 10px 8px;padding-top:calc(6px + env(safe-area-inset-top));border-bottom-width:3px}
+  header.top .home{width:44px;height:44px;padding:0;font-size:22px;flex:none}
+  header.top img{height:34px;max-width:84px;object-fit:contain;padding:2px 4px;flex:none}
+  header.top>div[style]{flex:1;min-width:0;margin-right:66px}
+  header.top h1{font-size:14px;line-height:1.15;letter-spacing:.3px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  header.top .sp{display:none}
+  header.top .tabs{order:5;flex:1 1 100%;margin:0;gap:8px}
+  header.top .tab{flex:1;min-height:44px;font-size:15px;padding:8px 6px;text-align:center}
+  header.top .acts{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;gap:8px;background:var(--navy);border-top:3px solid var(--gold);padding:8px 10px;padding-bottom:calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.25)}
+  header.top .acts .btn.create{flex:1 1 0;min-width:0;min-height:48px;padding:6px 4px;font-size:14px;line-height:1.15;white-space:normal;box-shadow:none}
+  header.top .acts .btn:hover{transform:none}
+  header.top .signout{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:41;min-height:44px;min-width:48px;padding:4px 8px;font-size:12px;line-height:1.1;white-space:normal;max-width:60px}
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  main{padding:12px 10px 24px}
+  section.card{margin-bottom:14px;border-radius:10px;overflow:clip}
+  section.card>h2{font-size:16px;padding:10px 14px}
+  .body{padding:14px 12px}
+  /* inputs: full width, 16px text (stops iOS zooming in), 44px tall */
+  input[type=text],input[type=date],input[type=search],input[type=email],input[type=password],textarea,select{font-size:16px;min-height:44px;max-width:100%;min-width:0}
+  input[type=date]{width:100%;display:block;-webkit-appearance:none;appearance:none;background:#fff;line-height:1.3}
+  label.f{min-width:0}
+  .grid,.grid4,.lists,.set .grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .btn{min-height:44px}
+  .btn.sm{min-height:44px;padding:8px 12px;font-size:14px}
+  input[type=checkbox]{width:22px;height:22px;vertical-align:-5px;margin:0 8px 0 0;accent-color:var(--navy)}
+  .aisw input[type=checkbox]{width:1px;height:1px;margin:0}
+  label.hint:has(input[type=checkbox]){display:flex!important;align-items:center;min-height:44px}
+  /* job details */
+  .profbar{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+  .profbar .pl{font-size:14px}
+  .profbar img{align-self:flex-start;height:38px}
+  .profbar select{min-width:0;width:100%}
+  .wo{max-width:none}.wo button{min-height:50px;font-size:15px}
+  /* photos */
+  .drop{padding:20px 14px}.drop b{font-size:17px}
+  .toolbar{gap:10px}
+  .toolbar label.f{flex-wrap:wrap;width:100%}
+  .toolbar #perPage{flex:1}
+  #descHeading{width:100%!important}
+  .photos{gap:12px}
+  .ph{display:flex;flex-direction:column;gap:10px;padding:10px;border-left-width:5px}
+  .ph .num{flex-direction:row;justify-content:flex-start;cursor:default;font-size:17px}
+  .ph .thumb{width:100%;height:auto;aspect-ratio:4/3;max-height:62vw}
+  .ph .thumb .mark{min-height:44px;padding:8px 12px;font-size:14px;left:8px;bottom:8px}
+  .ph .thumb .ed{display:none}
+  .ph .dl{flex-wrap:wrap;gap:2px 8px}
+  .ph textarea{height:auto;min-height:110px;font-size:16px}
+  .ph .acts{display:flex;flex-direction:row;gap:8px}
+  .ph .acts .btn{flex:1;min-height:46px;font-size:15px}
+  /* findings lists */
+  .lst .row input{min-height:44px}.lst .row button{width:46px;min-height:44px}
+  .lst .add{min-height:44px}
+  /* settings: company strip (swipe), editor single column */
+  .set{grid-template-columns:minmax(0,1fr);gap:14px}
+  .set>div{min-width:0}
+  .plist{flex-direction:row;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;gap:8px;padding:2px 2px 8px;margin:0 -2px}
+  .pitem{flex:0 0 auto;width:148px;flex-direction:column;align-items:flex-start;gap:6px;scroll-snap-align:start;min-height:96px;padding:8px}
+  .pitem .lg{width:100%;height:44px}
+  .pitem .nm{font-size:13px;line-height:1.2}
+  .plhint{font-size:12px;color:var(--grey);margin:-2px 0 4px}
+  #pEd .toolbar #pUse{flex:1}
+  .logobox{flex-direction:column;align-items:stretch}
+  .logobox .pv{width:100%;height:120px}
+  .logobox>div:last-child .btn{width:100%}
+  .swrow{flex-direction:column;gap:12px}
+  .swrow>div{width:100%}
+  .colf{width:100%}
+  .colf input[type=color]{width:56px;height:46px;flex:none}
+  .colf input[type=text]{flex:1;width:auto;font-size:16px}
+  .swrow select{width:100%}
+  .applyrow #colApply{min-width:120px}
+  .aibox{padding:12px}
+  .aisw{min-height:44px;flex:1 1 100%}
+  #aiRematch{width:100%}
+  #pPick{width:100%}
+  .sugg .sg button{min-height:36px;min-width:44px;font-size:12px}
+  .sugg .sg .c{width:52px;height:36px}
+  .hprev{width:640px;max-width:none;transform-origin:0 0}   /* the sample report keeps its real layout and is scaled down to fit (fitPreview) */
+  .savebar{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));background:#fff;z-index:5;margin:18px -12px -14px;padding:10px 12px;flex-wrap:wrap;justify-content:space-between;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
+  .savebar .btn.gold{flex:1 1 140px;min-height:48px}
+  .savebar .st{flex:1 1 100%;font-size:13px}
+  /* home + sign-in */
+  #welcome{justify-content:flex-start;padding:calc(48px + env(safe-area-inset-top)) 18px 24px;gap:26px;overflow-y:auto}
+  #welcome h1{font-size:32px;line-height:1.15}
+  #welcome .btns{min-width:0;width:100%;max-width:360px}
+  #welcome .go{padding:16px 20px;font-size:19px}
+  #welcomeMain{width:100%}
+  #signin{width:100%;max-width:380px;padding:18px 16px}
+  #signin input{min-height:48px}
+  #welcome .who{line-height:2.6}
+  #whoOut{min-height:44px;padding:0 6px}
+  /* previous reports */
+  #prevs .ph1{flex-wrap:wrap;gap:10px;padding:12px 12px;padding-top:calc(12px + env(safe-area-inset-top))}
+  #prevs .ph1 h2{font-size:21px}
+  #prevs .ph1 .sp{display:none}
+  #prevs .back{order:-1;min-height:44px;margin-left:auto}
+  #prevs .ph1 h2{order:-2}
+  #prevs input.q{order:3;width:100%;font-size:16px;min-height:46px}
+  #prevCount{order:2;flex:1 1 100%}
+  #prevs .plistr{padding:12px 10px 30px}
+  #prevs .row{grid-template-columns:84px minmax(0,1fr);gap:10px 12px;padding:10px}
+  #prevs .row .th{width:84px;height:64px}
+  #prevs .row .t1{font-size:16px;overflow-wrap:anywhere}
+  #prevs .row .t2,#prevs .row .t3{overflow-wrap:anywhere}
+  #prevs .row .ra{grid-column:1/-1}
+  #prevs .row .ra button{flex:1;min-height:44px}
+  /* modals full screen */
+  .modal{align-items:stretch;justify-content:stretch}
+  .modal .box{width:100%;max-width:none;height:100%;max-height:none;border-radius:0;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(10px + env(safe-area-inset-bottom));overflow-y:auto;gap:8px}
+  .mgr .box{width:100%}
+  .modal canvas{max-width:100%;max-height:52vh;align-self:center}
+  .modal .mt{gap:6px}
+  #edHint{flex:1 1 100%}
+  .tool{min-height:44px;padding:8px 10px;flex:1 1 auto}
+  .sw{width:44px;height:44px;margin:2px}
+  #edLabel{width:100%!important;flex:1 1 100%}
+  .modal .mt .sep{display:none}
+  .modal .mt>div[style*="flex:1"]{display:none}
+  #edCancel,#edOk{flex:1 1 40%;min-height:48px}
+  #edUndo,#edClear,#edRotL,#edRotR{flex:1 1 40%}
+  .modal .mt label.hint{display:flex;align-items:center;gap:8px;flex:1 1 100%}
+  .modal .mt label.hint select{flex:1}
+  .chip span{max-width:62vw}
+  .chip button{width:32px;height:32px}
+  /* toast + busy above the bottom bar */
+  #toast{left:10px;right:10px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:none}
+  .ac{max-width:calc(100vw - 20px)}
+  .ac .o{min-height:44px;align-items:center;font-size:15px}
+  .ac .o .x{min-width:36px;min-height:36px;font-size:20px}
+}
 </style>
 </head>
 <body>
@@ -305,7 +445,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 </div></section>
 
 <section class="card"><h2><span class="n">2</span>Photos</h2><div class="body">
-  <div class="drop" id="drop"><b>Drop photos here, or click to choose</b>You can pick many at once. Photo 1 goes on the cover, photo 2 on page 2 with the opening remark, the rest go on the photo pages in this order.</div>
+  <div class="drop" id="drop"><b><span class="dskonly">Drop photos here, or click to choose</span><span class="mobonly">📷 Tap to take photos or choose from your gallery</span></b>You can pick many at once. Photo 1 goes on the cover, photo 2 on page 2 with the opening remark, the rest go on the photo pages in this order.</div>
   <input type="file" id="photoFile" accept="image/*" multiple hidden>
   <div class="toolbar">
     <label class="f" style="flex-direction:row;align-items:center;gap:8px">Photos per page
@@ -334,7 +474,8 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
   <p class="hint" style="margin-top:0">A profile holds a company's logo, colours and details. Pick the profile on the Report tab and the whole report (logo, bars, lines, warranty blocks, headings, footer and details) uses it.</p>
   <div class="set">
     <div>
-      <div class="plist" id="plist"></div>
+      <div class="plhint mobonly">Swipe for more companies →</div>
+      <div class="plist" id="plist" data-hscroll></div>
       <div class="toolbar" style="flex-direction:column;align-items:stretch">
         <button class="btn gold" id="pAdd">＋ Add new company</button>
         <button class="btn sm bgonly" id="pDup">📄 Duplicate selected</button>
@@ -593,6 +734,7 @@ const PK = ["accent","dark","accentText","aiMatch","aiPrev","aiOffHint","aiResul
 function pendingSafe(){ if(!PEND) return PROFS; const d = JSON.parse(JSON.stringify(PROFS)), q = d.profiles.find(x => x.id===PEND.id);
   if(q) PK.forEach(k => { if(PEND.base[k]===undefined) delete q[k]; else q[k] = JSON.parse(JSON.stringify(PEND.base[k])); }); return d; }
 const clone = o => JSON.parse(JSON.stringify(o));
+const TOUCH = !!(window.matchMedia && matchMedia("(hover:none) and (pointer:coarse)").matches);
 const BUILTIN_PREFER = { plantquip: ["email"] };                          // fields where the built-in value wins over a merged hand-added copy
 const BUILTIN_WRONG = { plantquip: { email: ["casper@plantquips.co.za"] } }; // known-wrong saved values that get corrected
 function profLoad(){
@@ -795,7 +937,7 @@ function renderPhotos(){
     if(i>=2 && (i-2)%S.perPage===0){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent=`Page ${3+(i-2)/S.perPage}`; box.append(pb); }
     if(i===1){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent="Page 2"; box.append(pb); }
     if(i===0){ const pb=document.createElement("div"); pb.className="pagebreak"; pb.textContent="Page 1 – cover"; box.append(pb); }
-    const el = document.createElement("div"); el.className="ph"; el.draggable = true; el.title = "Drag to reorder"; el.dataset.i = i;
+    const el = document.createElement("div"); el.className="ph"; el.draggable = !TOUCH; el.title = TOUCH ? "" : "Drag to reorder"; el.dataset.i = i;
     el.innerHTML = `<div class="num" title="Drag to reorder">${i+1}</div>
       <div class="thumb" title="Click to mark damage (arrows, circles, boxes, text)"><img alt=""><button class="mark">➜ Mark damage</button></div>
       <div><div class="dl"><b>Description</b><span class="where"></span></div><textarea class="desc" placeholder="Describe this photo, e.g. Yoke sealing area worn. To be repaired."></textarea></div>
@@ -959,7 +1101,7 @@ $("#mgrFile").addEventListener("change", async e => { const f=e.target.files[0];
 $("#mgrSeed").onclick = () => { histMerge(SEED, true); renderMgr(); };
 
 /* ---------- drafts ---------- */
-function download(blob, name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},2000); }
+function download(blob, name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},60000); }
 const safe = s => (s||"").trim().replace(/[^A-Za-z0-9._-]+/g,"_") || "Report";
 function draftJSON(){ return JSON.stringify({app:"BRE Failure Report Builder", version:2, saved:new Date().toISOString(), ...S, profileId:profById(S.profileId).id, profile:resolved(profById(S.profileId))}); }
 function saveDraftFile(){ rememberAll(); download(new Blob([draftJSON()],{type:"application/json"}), safe(S.fields.job)+"_draft.json"); DIRTY = false; status("Report file saved to your Downloads folder."); }
@@ -1257,7 +1399,7 @@ async function createReport(){
   try{
     busy(true,"Building report…");
     const {pptx, fileName, pages} = await buildPptx(S);
-    await pptx.writeFile({fileName, compression:true});
+    const out = await pptx.write({outputType:"blob", compression:true}); download(out instanceof Blob ? out : new Blob([out],{type:"application/vnd.openxmlformats-officedocument.presentationml.presentation"}), fileName);
     let saved = ""; try{ busy(true,"Saving to Previous reports…"); const m = await storeReport("report"); saved = m.timesCreated>1 ? " · Previous reports entry updated" : " · saved in Previous reports"; }catch(e){ saved = " (could not save a copy in Previous reports: "+e.message+")"; }
     busy(false); DIRTY = false; status(`Created ${fileName} (${pages} pages) – check your Downloads folder${saved}.`);
   }catch(e){ busy(false); console.error(e); alert("Something went wrong building the report: "+e.message); }
@@ -1265,7 +1407,7 @@ async function createReport(){
 $("#btnCreate").onclick = createReport;
 
 /* ---------- tabs & settings ---------- */
-function showTab(t){ if(t!=="settings") revertPending(); $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t)); $("#reportView").hidden = t!=="report"; $("#settingsView").hidden = t!=="settings";
+function showTab(t){ if(t==="settings") setTimeout(fitPreview,0); if(t!=="settings") revertPending(); $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t)); $("#reportView").hidden = t!=="report"; $("#settingsView").hidden = t!=="settings";
   if(t==="settings"){ if(!PROFS.profiles.some(p=>p.id===SEL)) SEL = profById(S.profileId).id; renderSettings(); } window.scrollTo(0,0); }
 $$(".tab").forEach(b => b.onclick = () => { if(b.dataset.tab==="settings") SEL = profById(S.profileId).id; showTab(b.dataset.tab); });
 $("#pbEdit").onclick = () => { SEL = profById(S.profileId).id; showTab("settings"); };
@@ -1301,6 +1443,9 @@ function renderSettings(){ if(PEND && PEND.id!==SEL) revertPending(); if(SEL!==l
   $("#pState").textContent = p.id===profById(S.profileId).id ? "✔ Used by the current report" : "";
   $("#pSugg").innerHTML = ""; renderPreview(); renderPend();
 }
+function fitPreview(){ const h = $("#hprev"); if(!h) return; h.style.zoom = "";
+  if(window.innerWidth > 760 || !h.parentElement) return; const w = h.parentElement.clientWidth; if(w > 0 && w < 640) h.style.zoom = String(Math.floor(w/640*1000)/1000); }
+window.addEventListener("resize", () => fitPreview());
 function renderPreview(){
   const p = selProf(), T = themeOf(p), lg = T.logo, H = c => "#"+c;
   const hd = T.band ? `background:${H(T.dark)}` : "background:#fff";
@@ -1315,6 +1460,7 @@ function renderPreview(){
       <div style="padding:5px 8px;font-size:12px;font-family:Calibri,sans-serif"><span style="color:${H(T.accent)}">●</span> Bearings &amp; seals &nbsp; <b style="color:${H(T.accentText)};font-size:10px">DESCRIPTION</b></div></div>
     <div class="ft"><span><b style="color:${H(T.title)}">${(ft[0]||"").trim().replace(/</g,"&lt;")}</b>${ft.length>1 ? "  |  "+ft.slice(1).join("|").trim().replace(/</g,"&lt;") : ""}</span><span>Page 1 of 8</span></div>
     <div style="height:2px;background:${H(T.accent)}"></div><div class="bar" style="background:${H(T.dark)}"></div>`;
+  fitPreview();
 }
 $$("[data-pk]").forEach(el => el.addEventListener(el.type==="checkbox" || el.tagName==="SELECT" ? "change" : "input", () => {
   const p = selProf(); setK(p, el.dataset.pk, el.type==="checkbox" ? el.checked : el.value); profChanged(); }));
