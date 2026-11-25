@@ -51,4 +51,4 @@ Remember: if you self-host, it runs on your domain, so profiles need to be impor
 
 ## Built-in company profiles
 
-Black Rock Equipment (default) and HJ Stander. More companies can be added under **Settings** (upload logo, pick colours, enter details).
+Black Rock Equipment (default) and HJ Stander. Companies are managed in the **Settings** tab (upload logo, pick colours, enter details, then click **Save**). The company for each report is chosen at the top of Job details.
