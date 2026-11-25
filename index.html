@@ -81,6 +81,42 @@ header.top .btn.create{padding:9px 18px;font-size:15px;border-width:2px;box-shad
 #welcome .go:hover{background:#fff;transform:translateY(-1px)}
 #welcome .lnk{background:none;border:0;color:#9CA3AF;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 #welcome .lnk:hover{color:#E5E7EB}
+#welcome .btns{display:flex;flex-direction:column;gap:14px;align-items:stretch;min-width:300px}
+#welcome .go.alt{background:transparent;color:#F3F4F6;border:2px solid #9CA3AF;box-shadow:none}
+#welcome .go.alt:hover{background:rgba(255,255,255,.08);border-color:#E5E7EB}
+.bgonly{display:none!important}
+/* header buttons: hover = same accent look as Create Report */
+header.top .acts .btn{transition:background .12s,border-color .12s,color .12s,box-shadow .12s,transform .12s}
+header.top .acts .btn:hover,header.top .acts .btn:focus-visible{background:var(--gold);border-color:var(--gold);color:var(--on-accent);box-shadow:0 2px 8px rgba(0,0,0,.25);filter:none;transform:translateY(-1px)}
+header.top .acts .btn.create:hover{filter:brightness(1.06)}
+header.top .home{background:transparent;border:0;color:var(--on-dark);cursor:pointer;font-size:22px;line-height:1;padding:6px 8px;border-radius:8px;opacity:.85}
+header.top .home:hover{background:var(--gold);color:var(--on-accent);opacity:1}
+header.top h1.click{cursor:pointer}
+/* previous reports */
+#prevs{position:fixed;inset:0;z-index:110;background:#151B27;color:#F3F4F6;display:flex;flex-direction:column;font-family:"Segoe UI",Calibri,Arial,sans-serif}
+#prevs[hidden]{display:none}
+#prevs .ph1{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid #2B3442}
+#prevs .ph1 h2{margin:0;font-size:24px;font-weight:700}
+#prevs .ph1 .sp{flex:1}
+#prevs input.q{background:#0F141E;border:1px solid #3A4456;color:#F3F4F6;border-radius:10px;padding:11px 14px;font-size:15px;width:340px}
+#prevs .back{background:#F3F4F6;color:#111827;border:0;border-radius:10px;padding:11px 18px;font-weight:700;font-size:15px;cursor:pointer}
+#prevs .back:hover{background:#fff}
+#prevs .plistr{flex:1;overflow:auto;padding:18px 28px 40px;display:flex;flex-direction:column;gap:10px}
+#prevs .row{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center;background:#1E2533;border:1px solid #2B3442;border-radius:12px;padding:10px 14px}
+#prevs .row:hover{border-color:#4B5568}
+#prevs .row .th{width:96px;height:72px;border-radius:8px;background:#0F141E center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#5B6577;font-size:12px}
+#prevs .row .t1{font-size:17px;font-weight:700}
+#prevs .row .t2{font-size:14px;color:#C5CBD6;margin-top:3px}
+#prevs .row .t3{font-size:12.5px;color:#8A93A3;margin-top:4px}
+#prevs .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:2px}
+#prevs .badge.rep{background:#14532D;color:#BBF7D0}
+#prevs .badge.dr{background:#4B5563;color:#E5E7EB}
+#prevs .row .ra{display:flex;gap:8px}
+#prevs .row .ra button{border-radius:9px;padding:9px 16px;font-weight:700;font-size:14px;cursor:pointer;border:1.5px solid #4B5568;background:transparent;color:#E5E7EB}
+#prevs .row .ra .op{background:#F3F4F6;color:#111827;border-color:#F3F4F6}
+#prevs .row .ra .op:hover{background:#fff}
+#prevs .row .ra .rm:hover{border-color:#F87171;color:#FCA5A5}
+#prevs .empty{color:#8A93A3;text-align:center;margin-top:80px;font-size:16px}
 .modal{position:fixed;inset:0;background:rgba(10,15,30,.75);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.show{display:flex}
 .modal .box{background:#fff;border-radius:12px;padding:16px;max-width:95vw;max-height:95vh;display:flex;flex-direction:column;gap:10px}
@@ -157,18 +193,26 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
 <body>
 <div id="welcome">
   <h1>Failure Report Builder</h1><div class="rule"></div>
-  <button class="go" id="welcomeStart">Create Report</button>
-  <button class="lnk" id="welcomeOpen">or open a saved draft…</button>
+  <div class="btns"><button class="go" id="welcomeStart">Create Report</button>
+  <button class="go alt" id="welcomePrev">Previous reports</button></div>
+  <button class="lnk bgonly" id="welcomeOpen">or open a saved draft…</button>
+</div>
+<div id="prevs" hidden>
+  <div class="ph1"><h2>Previous reports</h2><span id="prevCount" style="color:#8A93A3;font-size:14px"></span><div class="sp"></div>
+    <input class="q" id="prevQ" type="search" placeholder="Search job, client, component, company, date…">
+    <button class="back" id="prevBack">← Home</button></div>
+  <div class="plistr" id="prevList"></div>
 </div>
 <header class="top">
+  <button class="home" id="btnHome" title="Home – start a new report">⌂</button>
   <img id="hdrLogo" alt="Company logo">
-  <div style="min-width:0"><h1>FAILURE REPORT BUILDER</h1><div class="sub" id="hdrSub">fill in, add photos, click Create Report</div><div class="status" id="status">Ready.</div></div>
+  <div style="min-width:0"><h1 class="click" id="hdrTitle" title="Home – start a new report">FAILURE REPORT BUILDER</h1><div class="sub" id="hdrSub">fill in, add photos, click Create Report</div><div class="status" id="status">Ready.</div></div>
   <div class="tabs"><button class="tab on" data-tab="report">📝 Report</button><button class="tab" data-tab="settings">⚙ Settings</button></div>
   <div class="sp"></div>
   <div class="acts">
-  <button class="btn sm" id="btnNew">New report</button>
-  <button class="btn sm" id="btnLoad">Open draft…</button>
-  <button class="btn sm" id="btnSave">Save draft</button>
+  <button class="btn sm bgonly" id="btnNew">New report</button>
+  <button class="btn sm bgonly" id="btnLoad">Open draft…</button>
+  <button class="btn create" id="btnSave">Save draft</button>
   <button class="btn gold create" id="btnCreate">Create Report</button>
   </div>
   <input type="file" id="draftFile" accept=".json,application/json" hidden>
@@ -213,7 +257,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
     <label class="f" style="flex-direction:row;align-items:center;gap:8px">Photos per page
       <select id="perPage"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
     <label class="f" style="flex-direction:row;align-items:center;gap:8px">Heading beside photos on report
-      <select id="descHeading"><option value="DESCRIPTION">DESCRIPTION</option><option value="COMMENTS">COMMENTS</option></select></label>
+      <input type="text" id="descHeading" value="DESCRIPTION" maxlength="40" style="width:230px;font-weight:600" title="Pick DESCRIPTION or COMMENTS, or type your own heading"></label>
     <span class="info" id="photoInfo">No photos yet.</span>
   </div>
   <label class="f" style="margin-bottom:14px">Opening remark (page 2, above photo 2)
@@ -239,19 +283,19 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
       <div class="plist" id="plist"></div>
       <div class="toolbar" style="flex-direction:column;align-items:stretch">
         <button class="btn gold" id="pAdd">＋ Add new company</button>
-        <button class="btn sm" id="pDup">📄 Duplicate selected</button>
-        <button class="btn sm danger" id="pDel">🗑 Delete selected</button>
-        <button class="btn sm" id="pExport">⬇ Export profiles…</button>
-        <button class="btn sm" id="pImport">⬆ Import profiles…</button>
+        <button class="btn sm bgonly" id="pDup">📄 Duplicate selected</button>
+        <button class="btn sm danger bgonly" id="pDel">🗑 Delete selected</button>
+        <button class="btn sm bgonly" id="pExport">⬇ Export profiles…</button>
+        <button class="btn sm bgonly" id="pImport">⬆ Import profiles…</button>
         <input type="file" id="pFile" accept=".json,application/json" hidden>
       </div>
     </div>
     <div id="pEd">
       <div class="toolbar" style="margin-top:0">
         <button class="btn navy" id="pUse">✔ Use for this report</button>
-        <button class="btn sm" id="pDefault">★ Make default for new reports</button>
-        <button class="btn sm" id="pRestore" hidden>↺ Restore original</button>
-        <span class="info" id="pState"></span>
+        <button class="btn sm bgonly" id="pDefault">★ Make default for new reports</button>
+        <button class="btn sm bgonly" id="pRestore" hidden>↺ Restore original</button>
+        <span class="info bgonly" id="pState"></span>
       </div>
       <div class="grid">
         <label class="f">Company name (as on the report)<input type="text" data-pk="name"></label>
@@ -292,7 +336,7 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
     </div>
   </div>
 </div></section>
-<section class="card"><h2><span class="n">⇅</span>Drop-down history – backup / move to another PC</h2><div class="body">
+<section class="card bgonly" id="histCard"><h2><span class="n">⇅</span>Drop-down history – backup / move to another PC</h2><div class="body">
   <p class="hint" style="margin-top:0">Everything you type (clients, components, artisans, descriptions, list items…) is remembered automatically and offered in the drop-downs. It is stored in this browser only. Export it to back it up or to load it on another PC or at another link.</p>
   <div class="toolbar">
     <button class="btn sm" id="mgrExport">⬇ Export drop-down history…</button>
@@ -504,7 +548,7 @@ const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.g
 function blankState(){ return {
   fields:{job:"",client:"",component:"",serial:"",make:"",model:"",plant:"",site:"",date_delivery:"",date_report:todayISO(),repair_type:"",artisan:"",
     doc_no:"BRE/QC//VR/02",impl_date:"01/03/2023",rev_no:"0",rev_date:todayISO(),intro:"",comments:""},
-  warranty:"na", perPage:4, descHeading:"DESCRIPTION", profileId:PROFS.defaultId, replace:[], repair:[], missing:[], photos:[] }; }
+  warranty:"na", perPage:4, descHeading:"DESCRIPTION", profileId:PROFS.defaultId, replace:[], repair:[], missing:[], photos:[], reportId:null }; }
 let S = blankState();
 let uid = 1;
 const thumbs = {}; // id -> composite thumbnail dataURL (not saved)
@@ -542,7 +586,9 @@ $$("[data-k]").forEach(el => el.addEventListener("input", () => { S.fields[el.da
 const AC_FIELDS = ["client","site","component","make","model","plant","artisan","repair_type","doc_no","intro","comments"];
 $$("#wo button").forEach(b => b.addEventListener("click", () => { S.warranty = b.dataset.v; renderFields(); autosave(); }));
 $("#perPage").addEventListener("change", e => { S.perPage = +e.target.value; renderPhotos(); autosave(); });
-$("#descHeading").addEventListener("change", e => { S.descHeading = e.target.value; autosave(); });
+$("#descHeading").addEventListener("input", e => { S.descHeading = e.target.value.trim() || "DESCRIPTION"; autosave(); });
+$("#descHeading").addEventListener("focus", e => setTimeout(() => e.target.select(), 0)); // typing replaces the heading; the list still shows all options
+$("#descHeading").addEventListener("blur", e => { if(!e.target.value.trim()){ e.target.value = "DESCRIPTION"; S.descHeading = "DESCRIPTION"; } });
 
 function renderList(name){
   const box = document.querySelector(`.lst[data-list=${name}] .items`); box.innerHTML = "";
@@ -717,10 +763,11 @@ document.addEventListener("keydown", e => { if(ED && e.key==="z" && (e.ctrlKey||
 
 /* ---------- remembered values (drop-downs) ---------- */
 const HIST_KEY = "bre_saved_lists_v1", HIST_SEEDED = "bre_saved_lists_seeded_v1", HIST_MAX = 300;
-const HIST_LABELS = {client:"Client name", site:"Site", component:"Component", make:"Make", model:"Model", plant:"Plant number", artisan:"Artisan",
+const HIST_LABELS = {heading:"Photo headings", client:"Client name", site:"Site", component:"Component", make:"Make", model:"Model", plant:"Plant number", artisan:"Artisan",
   repair_type:"Repair type", doc_no:"Reference number", replace:"REPLACE items", repair:"REPAIR items", missing:"MISSING items", caption:"Photo descriptions",
   intro:"Opening remarks (page 2)", comments:"Findings comments"};
 const SEED = {
+  heading:["DESCRIPTION","COMMENTS"],
   client:["Gold 1"], site:["New Kleinfontein"], component:["Transmission","Torque Converter"], make:["Caterpillar","CAT"], model:["R1700G"],
   plant:["STC10","STC14"], artisan:["Chris","Tim","Michael"], repair_type:["Repair","Rebuild"], doc_no:["BRE/QC//VR/02"],
   replace:["Bearings & seals","Friction disc & steel plates","Friction & steel plates","Clutch springs","Clutch piston","Rotary clutch piston","Input yoke",
@@ -733,7 +780,8 @@ const SEED = {
 };
 let H = {};
 function histLoad(){ try{ H = JSON.parse(localStorage.getItem(HIST_KEY)||"{}") || {}; }catch(e){ H = {}; }
-  if(!localStorage.getItem(HIST_SEEDED)){ histMerge(SEED, true); localStorage.setItem(HIST_SEEDED, "1"); } }
+  if(!localStorage.getItem(HIST_SEEDED)){ histMerge(SEED, true); localStorage.setItem(HIST_SEEDED, "1"); }
+  histMerge({heading:["DESCRIPTION","COMMENTS"]}, true); } // the two standard headings are always offered
 function histSave(){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(H)); }catch(e){} }
 function histAdd(key, val, quiet){
   const v = (val||"").replace(/\s+$/,"").replace(/^\s+/,""); if(!v || !HIST_LABELS[key]) return;
@@ -746,7 +794,7 @@ function histRemove(key, val){ H[key] = (H[key]||[]).filter(x => x !== val); his
 function rememberAll(){
   ["client","site","component","make","model","plant","artisan","repair_type","doc_no","intro","comments"].forEach(k => histAdd(k, S.fields[k], true));
   ["replace","repair","missing"].forEach(k => S[k].forEach(v => histAdd(k, v, true)));
-  S.photos.forEach(p => histAdd("caption", p.caption, true)); histSave();
+  S.photos.forEach(p => histAdd("caption", p.caption, true)); histAdd("heading", S.descHeading, true); histSave();
 }
 // custom combobox: shows all saved options on click/focus, filters as you type, free text still allowed
 const AC = {el:null, key:null, items:[], hi:-1};
@@ -807,10 +855,61 @@ $("#mgrSeed").onclick = () => { histMerge(SEED, true); renderMgr(); };
 function download(blob, name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},2000); }
 const safe = s => (s||"").trim().replace(/[^A-Za-z0-9._-]+/g,"_") || "Report";
 function draftJSON(){ return JSON.stringify({app:"BRE Failure Report Builder", version:2, saved:new Date().toISOString(), ...S, profileId:profById(S.profileId).id, profile:resolved(profById(S.profileId))}); }
-function saveDraft(){ rememberAll(); download(new Blob([draftJSON()],{type:"application/json"}), safe(S.fields.job)+"_draft.json"); DIRTY = false; status("Draft saved to your Downloads folder (includes the photos). Use Open draft… to continue it later."); }
+function saveDraftFile(){ rememberAll(); download(new Blob([draftJSON()],{type:"application/json"}), safe(S.fields.job)+"_draft.json"); DIRTY = false; status("Draft file saved to your Downloads folder."); }
+/* ---------- previous reports (IndexedDB: kv "rep:<id>" = full copy, kv "repIndex" = list) ---------- */
+const newRepId = () => "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+async function repIndex(){ try{ const x = await IDB.get("repIndex"); return Array.isArray(x) ? x : []; }catch(e){ return []; } }
+function smallThumb(src){ return new Promise(res => { if(!src) return res(""); const im = new Image(); im.onload = () => { const W = 192, H = 144, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"), r = Math.max(W/im.width, H/im.height), w = im.width*r, h = im.height*r; g.fillStyle="#fff"; g.fillRect(0,0,W,H); g.drawImage(im,(W-w)/2,(H-h)/2,w,h); res(c.toDataURL("image/jpeg",0.72)); }; im.onerror = () => res(""); im.src = src; }); }
+async function storeReport(kind){   // kind: "report" (Create Report) or "draft" (Save draft)
+  rememberAll();
+  if(!S.reportId) S.reportId = newRepId();
+  const id = S.reportId, now = new Date().toISOString(), idx = await repIndex(), old = idx.find(x => x.id===id);
+  const copy = JSON.parse(draftJSON());
+  const ph = S.photos[0]; const thumb = ph ? await smallThumb(thumbs[ph.id] || ph.data) : "";
+  const meta = { id, job:S.fields.job||"", client:S.fields.client||"", component:S.fields.component||"", make:S.fields.make||"", model:S.fields.model||"",
+    company: profById(S.profileId).name, profileId: profById(S.profileId).id, reportDate: S.fields.date_report||"", photos: S.photos.length,
+    created: old ? old.created : now, updated: now, kind: kind==="report" || (old && old.kind==="report") ? "report" : "draft",
+    lastAction: kind, timesCreated: (old ? old.timesCreated||0 : 0) + (kind==="report" ? 1 : 0), thumb };
+  await IDB.put("rep:"+id, copy);
+  const ni = idx.filter(x => x.id!==id); ni.unshift(meta); await IDB.put("repIndex", ni);
+  return meta; }
+async function saveDraft(){ try{ busy(true,"Saving draft…"); const m = await storeReport("draft"); busy(false); DIRTY = false;
+    status(`Draft saved in Previous reports (${m.job || "no job number"}).`); }catch(e){ busy(false); alert("Could not save the draft in this browser: "+e.message+"\nThe draft will be downloaded as a file instead."); saveDraftFile(); } }
+async function openStored(id){ const d = await IDB.get("rep:"+id); if(!d) { alert("That report could not be found any more."); return false; }
+  await applyDraft(d); S.reportId = id; $("#prevs").hidden = true; hideWelcome(); showTab("report"); window.scrollTo(0,0);
+  status(`Opened ${S.fields.job || "report"} from Previous reports – Create Report updates this entry.`); return true; }
+async function deleteStored(id){ const idx = await repIndex(); await IDB.put("repIndex", idx.filter(x => x.id!==id)); await IDB.del("rep:"+id); if(S.reportId===id) S.reportId = null; }
+const fmtD = iso => { if(!iso) return ""; const d = new Date(iso); const p = n => String(n).padStart(2,"0"); return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const escH = t => String(t||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function renderPrev(){ const idx = (await repIndex()).slice().sort((a,b) => (b.updated||"").localeCompare(a.updated||""));
+  const q = $("#prevQ").value.trim().toLowerCase(); const box = $("#prevList"); box.innerHTML = "";
+  const list = idx.filter(m => !q || [m.job,m.client,m.component,m.make,m.model,m.company,fmtD(m.created),fmtD(m.updated),m.reportDate,m.kind==="report"?"report":"draft"].join(" ").toLowerCase().includes(q));
+  $("#prevCount").textContent = idx.length ? `${list.length} of ${idx.length}` : "";
+  if(!idx.length){ box.innerHTML = '<div class="empty">No reports yet. Every report you create (and every draft you save) is kept here automatically.</div>'; return; }
+  if(!list.length){ box.innerHTML = '<div class="empty">Nothing matches your search.</div>'; return; }
+  for(const m of list){ const r = document.createElement("div"); r.className = "row"; r.dataset.id = m.id;
+    r.innerHTML = `<div class="th" style="${m.thumb ? `background-image:url(${m.thumb})` : ""}">${m.thumb ? "" : "no photo"}</div>
+      <div><div class="t1">${escH(m.job || "(no job number)")}<span class="badge ${m.kind==="report"?"rep":"dr"}">${m.kind==="report"?"REPORT":"DRAFT"}</span></div>
+      <div class="t2">${escH([m.client, m.component, [m.make,m.model].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—")}</div>
+      <div class="t3">${escH(m.company)} · created ${fmtD(m.created)}${m.updated && m.updated!==m.created ? " · updated "+fmtD(m.updated) : ""} · ${m.photos} photo${m.photos===1?"":"s"}</div></div>
+      <div class="ra"><button class="op">Open</button><button class="rm">Delete</button></div>`;
+    r.querySelector(".op").onclick = async () => { try{ await openStored(m.id); }catch(e){ busy(false); alert("Could not open the report: "+e.message); } };
+    r.querySelector(".rm").onclick = async () => { if(!confirm(`Delete ${m.job || "this report"} (${m.client || "no client"}) from Previous reports?\nThis cannot be undone.`)) return; await deleteStored(m.id); renderPrev(); };
+    box.append(r); } }
+$("#welcomePrev").onclick = async () => { $("#prevQ").value = ""; $("#prevs").hidden = false; await renderPrev(); $("#prevQ").focus(); };
+$("#prevBack").onclick = () => { $("#prevs").hidden = true; };
+$("#prevQ").addEventListener("input", renderPrev);
+function goHome(){ if(hasContent() && DIRTY && !confirm("Go back to the home screen? Changes that are not saved (Save draft or Create Report) will be lost.")) return;
+  S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); $("#prevs").hidden = true; $("#welcome").hidden = false; }
+$("#btnHome").onclick = $("#hdrTitle").onclick = goHome;
+/* a .json draft file can still be opened by dropping it on the window (no button needed) */
+window.addEventListener("dragover", e => { if([...(e.dataTransfer.items||[])].some(i => i.kind==="file")) e.preventDefault(); });
+window.addEventListener("drop", async e => { const f = [...(e.dataTransfer.files||[])].find(f => /\.json$/i.test(f.name)); if(!f) return; e.preventDefault();
+  try{ await applyDraft(JSON.parse(await f.text())); S.reportId = null; $("#prevs").hidden = true; hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
 async function applyDraft(d){
   const b = blankState();
-  S = {...b, ...d, fields:{...b.fields, ...(d.fields||{})}}; delete S.profile; delete S.app; delete S.version; delete S.saved;
+  S = {...b, ...d, fields:{...b.fields, ...(d.fields||{})}}; delete S.profile; delete S.app; delete S.version; delete S.saved; S.reportId = null;
   if(d.profile && d.profile.id && !PROFS.profiles.some(p => p.id===d.profile.id)){ // draft made with a company this PC doesn't have yet
     const np = {...d.profile, builtin:false}; PROFS.profiles.push(np); profSave(); status(`Added company profile "${np.name}" from the draft.`); }
   if(!PROFS.profiles.some(p => p.id===S.profileId)) S.profileId = PROFS.defaultId;
@@ -821,7 +920,7 @@ async function applyDraft(d){
 $("#btnSave").onclick = saveDraft;
 $("#btnLoad").onclick = () => $("#draftFile").click();
 $("#draftFile").addEventListener("change", async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  try{ await applyDraft(JSON.parse(await f.text())); hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
+  try{ await applyDraft(JSON.parse(await f.text())); $("#prevs").hidden = true; hideWelcome(); showTab("report"); status(`Opened draft ${f.name}.`); }catch(err){ busy(false); alert("That file isn't a valid draft: "+err.message); } });
 $("#btnNew").onclick = () => { if(hasContent() && DIRTY && !confirm("Start a new blank report? Anything not saved as a draft will be cleared.")) return; S = blankState(); DIRTY = false; renderFields(); renderPhotos(); applyTheme(); status("New blank report."); };
 function busy(on, t){ $("#busy").classList.toggle("show", on); if(t) $("#busy").textContent = t; }
 
@@ -1016,7 +1115,8 @@ async function createReport(){
     busy(true,"Building report…");
     const {pptx, fileName, pages} = await buildPptx(S);
     await pptx.writeFile({fileName, compression:true});
-    busy(false); DIRTY = false; status(`Created ${fileName} (${pages} pages) – check your Downloads folder.`);
+    let saved = ""; try{ busy(true,"Saving to Previous reports…"); const m = await storeReport("report"); saved = m.timesCreated>1 ? " · Previous reports entry updated" : " · saved in Previous reports"; }catch(e){ saved = " (could not save a copy in Previous reports: "+e.message+")"; }
+    busy(false); DIRTY = false; status(`Created ${fileName} (${pages} pages) – check your Downloads folder${saved}.`);
   }catch(e){ busy(false); console.error(e); alert("Something went wrong building the report: "+e.message); }
 }
 $("#btnCreate").onclick = createReport;
@@ -1037,7 +1137,7 @@ function renderPList(){
   PROFS.profiles.forEach(p => { const T = themeOf(p), lg = T.logo; const el = document.createElement("div"); el.className = "pitem"+(p.id===SEL?" sel":""); el.dataset.id = p.id;
     el.innerHTML = `<div class="lg" style="background:${lg&&lg.dark?"#"+T.dark:"#fff"}"><img alt=""></div><div><div class="nm"></div><div class="bd"></div></div>`;
     if(lg) el.querySelector("img").src = lg.data; el.querySelector(".nm").textContent = p.name;
-    el.querySelector(".bd").innerHTML = [p.id===PROFS.defaultId?"<b>★ default</b>":"", p.id===profById(S.profileId).id?"<b>✔ this report</b>":"", p.builtin?"built-in":""].filter(Boolean).join(" · ") +
+    el.querySelector(".bd").innerHTML = "" + // v7: default / this-report / built-in tags hidden (logic unchanged)
       ` <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#${T.accent}"></span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#${T.dark}"></span>`;
     el.onclick = () => { SEL = p.id; renderSettings(); }; box.append(el); });
 }
@@ -1147,11 +1247,11 @@ $("#pFile").addEventListener("change", async e => { const f = e.target.files[0];
   catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
 
 // test / automation hooks
-window.BRE = { get state(){return S;}, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
+window.BRE = { get state(){return S;}, repIndex, openStored, deleteStored, storeReport, saveDraftFile, goHome, hasContent, get dirty(){return DIRTY;}, get profiles(){return PROFS;}, themeOf, profById, logoColours, get lists(){return H;}, rememberAll, applyDraft, buildBase64: async () => { const {pptx,fileName,pages} = await buildPptx(S); return {b64: await pptx.write({outputType:"base64", compression:true}), fileName, pages}; }, draftJSON };
 
 /* ---------- start ---------- */
 profLoad(); S.profileId = PROFS.defaultId;
-histLoad(); AC_FIELDS.forEach(k => attachAC(document.querySelector(`[data-k=${k}]`), k));
+histLoad(); AC_FIELDS.forEach(k => attachAC(document.querySelector(`[data-k=${k}]`), k)); attachAC($("#descHeading"), "heading");
 function hideWelcome(){ $("#welcome").hidden = true; }
 $("#welcomeStart").onclick = () => { S = blankState(); S.profileId = PROFS.defaultId; DIRTY = false; renderFields(); renderPhotos(); applyTheme(); showTab("report"); hideWelcome(); window.scrollTo(0,0);
   status("New blank report – choose the company, then fill in the details."); setTimeout(() => $("#profSel").focus(), 50); };
