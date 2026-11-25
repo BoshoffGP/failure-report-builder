@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Failure Report Builder</title>
 <style>
-:root{--navy:#14213D;--gold:#F0B429;--golddk:#B7791F;--on-dark:#FFFFFF;--on-accent:#14213D;--tint:#FFF8E6;--grey:#6B7280;--line:#D9DEE5;--light:#F4F6F8;--ink:#1F2937;--green:#16A34A;--red:#DC2626}
+:root{--navy:#0A1626;--gold:#ECB100;--golddk:#8A6700;--on-dark:#FFFFFF;--on-accent:#0A1626;--tint:#FFF8E6;--grey:#6B7280;--line:#D9DEE5;--light:#F4F6F8;--ink:#1F2937;--green:#16A34A;--red:#DC2626}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Segoe UI",Calibri,Arial,sans-serif;background:#EEF1F5;color:var(--ink);font-size:15px}
 header.top{background:var(--navy);color:var(--on-dark);display:flex;align-items:center;gap:18px;padding:10px 24px;border-bottom:4px solid var(--gold);position:sticky;top:0;z-index:20}
@@ -530,7 +530,7 @@ const rgbDist = (a,b) => { const A=rgbOf(a),B=rgbOf(b); return Math.hypot(A[0]-B
 /* ---------- company profiles ---------- */
 const PROF_KEY = "bre_profiles_v1";
 const BUILTIN_PROFILES = [
-  {id:"blackrock", builtin:true, name:"Black Rock Equipment", logo:"builtin:blackrock", accent:"F0B429", dark:"14213D", accentText:"B7791F", headerStyle:"light",
+  {id:"blackrock", builtin:true, name:"Black Rock Equipment", logo:"builtin:blackrock", accent:"ECB100", dark:"0A1626", accentText:"8A6700", headerStyle:"light",
    d:{legal:"", address:"", phone:"+27 72 284 2179 / +27 76 840 7771", email:"", website:"blackrockequip.co.za", coreg:"", vat:"", extra:""}, showDetails:false, footer:"Black Rock Equipment | Failure Report"},
   {id:"hjstander", builtin:true, name:"HJ Stander", logo:"builtin:hjstander", accent:"EC1F25", dark:"35363A", headerStyle:"auto",
    d:{legal:"HJ Stander Consulting Engineering & Mining Supplies cc", address:"Plot 29, Goedgenoeg Hoewe, Orkney, 2619", phone:"082 040 6057", email:"hennie.stander@koshcom.co.za",
@@ -542,6 +542,12 @@ function profLoad(){
   try{ const t = JSON.parse(localStorage.getItem(PROF_KEY)||"null"); if(t && Array.isArray(t.profiles)) PROFS = t; }catch(e){}
   BUILTIN_PROFILES.forEach(b => { if(!PROFS.profiles.some(p => p.id===b.id)) PROFS.profiles.splice(BUILTIN_PROFILES.indexOf(b), 0, clone(b)); });
   if(!PROFS.profiles.some(p=>p.id===PROFS.defaultId)) PROFS.defaultId = "blackrock";
+  // v15: Black Rock colours follow blackrockequip.co.za – migrate only profiles that still have the old built-in defaults
+  const OLD_BR = {accent:"F0B429", dark:"14213D"}, NEW_BR = {accent:"ECB100", dark:"0A1626", accentText:"8A6700"}, isOld = o => o && hx(o.accent)===OLD_BR.accent && hx(o.dark)===OLD_BR.dark && (!o.accentText || hx(o.accentText)==="B7791F");
+  const br = PROFS.profiles.find(p => p.id==="blackrock"); let mig = false;
+  if(br && isOld(br)){ Object.assign(br, NEW_BR); mig = true; }
+  if(br && br.aiPrev && isOld(br.aiPrev)){ Object.assign(br.aiPrev, NEW_BR); mig = true; }
+  if(mig) try{ localStorage.setItem(PROF_KEY, JSON.stringify(PROFS)); }catch(e){}
 }
 function profSave(){ try{ localStorage.setItem(PROF_KEY, JSON.stringify(PROFS)); return true; }catch(e){ alert("Could not save the company profiles – the browser storage is full. Try a smaller logo, or export profiles and delete unused ones."); return false; } }
 const profById = id => PROFS.profiles.find(p => p.id===id) || PROFS.profiles.find(p => p.id===PROFS.defaultId) || PROFS.profiles[0];
@@ -549,7 +555,7 @@ function logoOf(p){ if(String(p.logo||"").startsWith("builtin:")){ const b = BUI
   return p.logo ? {data:p.logo, ar:p.logoAR||1.4, dark:!!p.logoDark} : null; }
 function resolved(p){ const o = clone(p); const l = logoOf(p); if(l){ o.logo = l.data; o.logoAR = l.ar; o.logoDark = l.dark; } return o; }
 function themeOf(p){
-  const accent = hx(p.accent)||"F0B429", dark = hx(p.dark)||"14213D", lg = logoOf(p);
+  const accent = hx(p.accent)||"ECB100", dark = hx(p.dark)||"0A1626", lg = logoOf(p);
   const band = p.headerStyle==="band" || (p.headerStyle!=="light" && !!(lg && lg.dark));
   const title = readableOn(dark, "FFFFFF", 4.5);
   const accentText = hx(p.accentText) || readableOn(mix(accent,"000000",0.18), "FFFFFF", 4.5);
@@ -1212,8 +1218,8 @@ let lastSettingsSel = null;
 function renderSettings(){ if(SEL!==lastSettingsSel){ lastSettingsSel = SEL; resetProfState(); } setTimeout(renderAI, 0);
   const p = selProf(); renderPList();
   $$("[data-pk]").forEach(el => { const v = getK(p, el.dataset.pk); if(el.type==="checkbox") el.checked = !!v; else el.value = v ?? (el.dataset.pk==="headerStyle" ? "auto" : ""); });
-  $("#cAccent").value = "#"+(hx(p.accent)||"F0B429"); $("#hAccent").value = "#"+(hx(p.accent)||"F0B429");
-  $("#cDark").value = "#"+(hx(p.dark)||"14213D"); $("#hDark").value = "#"+(hx(p.dark)||"14213D");
+  $("#cAccent").value = "#"+(hx(p.accent)||"ECB100"); $("#hAccent").value = "#"+(hx(p.accent)||"ECB100");
+  $("#cDark").value = "#"+(hx(p.dark)||"0A1626"); $("#hDark").value = "#"+(hx(p.dark)||"0A1626");
   const lg = logoOf(p); $("#pLogo").src = lg ? lg.data : ""; $("#pLogo").parentNode.style.background = lg && lg.dark ? "#"+themeOf(p).dark : "#fff";
   $("#pLogoInfo").textContent = lg ? `Logo ${lg.ar.toFixed(2)} : 1 (width : height)` : "No logo yet";
   $("#pRestore").hidden = !p.builtin; $("#pDel").disabled = !!p.builtin;
@@ -1366,7 +1372,7 @@ $("#pPick").onclick = async () => { const p = selProf(), lg = logoOf(p); if(!lg)
 };
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 $("#pAdd").onclick = () => { const name = prompt("Company name for the new profile:", "New Company"); if(!name) return;
-  const p = {id:newId(), name, logo:"", accent:"F0B429", dark:"1F2937", headerStyle:"auto", d:{legal:"",address:"",phone:"",email:"",website:"",coreg:"",vat:"",extra:""}, showDetails:true, footer:`${name} | Failure Report`};
+  const p = {id:newId(), name, logo:"", accent:"ECB100", dark:"1F2937", headerStyle:"auto", d:{legal:"",address:"",phone:"",email:"",website:"",coreg:"",vat:"",extra:""}, showDetails:true, footer:`${name} | Failure Report`};
   PROFS.profiles.push(p); SEL = p.id; profSave(); renderSettings(); renderProfSel(); status(`Added ${name}. Upload the logo and set the colours.`); };
 $("#pDup").onclick = () => { const s0 = selProf(); const p = {...clone(resolved(s0)), id:newId(), builtin:false, name:s0.name+" (copy)"};
   PROFS.profiles.push(p); SEL = p.id; if(!profSave()){ PROFS.profiles.pop(); return; } renderSettings(); renderProfSel(); };

@@ -53,3 +53,5 @@ Remember: if you self-host, it runs on your domain, so profiles need to be impor
 ## Built-in company profiles
 
 Black Rock Equipment (default) and HJ Stander. Companies are managed in the **Settings** tab (upload logo, pick colours, enter details, then click **Save**). The company for each report is chosen at the top of Job details.
+
+Black Rock Equipment's default colours match blackrockequip.co.za: gold `#ECB100`, dark ink `#0A1626` (header bars and the builder's top bar) and dark gold `#8A6700` for small accent text. Saved Black Rock profiles that still had the old default colours are updated automatically; colours you changed yourself are kept.
