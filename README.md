@@ -53,6 +53,6 @@ Remember: if you self-host, it runs on your domain, so profiles need to be impor
 
 ## Built-in company profiles
 
-Black Rock Equipment (default) and HJ Stander. Companies are managed in the **Settings** tab (upload logo, pick colours, enter details, then click **Save**). The company for each report is chosen at the top of Job details.
+Nine companies are built in, so they appear in any browser (including a fresh one) with their logos, colours and details: Black Rock Equipment (default), HJ Stander, ECCS Modiba, Leo Tecnologies, LeoRock Mining & Plant, Simba Components, Phoenix Turbochargers, Intaba Heavy Equipment and Plantquip. If a browser already has a hand-added company with the same name, it is merged into the built-in one (your own edits are kept, no duplicate). Companies are managed in the **Settings** tab (upload logo, pick colours, enter details, then click **Save**). The company for each report is chosen at the top of Job details.
 
 Black Rock Equipment uses its original black & yellow scheme: gold `#F0B429`, navy-black `#14213D` and dark gold `#B7791F` for small accent text.
