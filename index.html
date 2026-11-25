@@ -339,8 +339,8 @@ textarea.has-ac{background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14p
         <button class="btn gold" id="pAdd">＋ Add new company</button>
         <button class="btn sm bgonly" id="pDup">📄 Duplicate selected</button>
         <button class="btn sm danger bgonly" id="pDel">🗑 Delete selected</button>
-        <button class="btn sm bgonly" id="pExport">⬇ Export profiles…</button>
-        <button class="btn sm bgonly" id="pImport">⬆ Import profiles…</button>
+        <button class="btn sm" id="pExport" title="Download all companies (logos, colours, details) as frb-companies.json – use it as a backup or to move them to another computer / the online version">⬇ Export companies</button>
+        <button class="btn sm" id="pImport" title="Add companies from an frb-companies.json file (existing ones with the same name are updated)">⬆ Import companies</button>
         <input type="file" id="pFile" accept=".json,application/json" hidden>
       </div>
     </div>
@@ -1447,16 +1447,19 @@ $("#pUse").onclick = () => { if(commitPending()) profSave(); S.profileId = SEL; 
 $("#pSave").onclick = () => { const p = selProf(); if(!p.name || !p.name.trim()){ alert("Please enter the company name first."); return; }
   const had = commitPending(); if(profSave()){ renderPList(); renderProfSel(); applyTheme(); renderPend(); markProfSaved(); if(had) status(`Saved – ${p.name} colours and details.`, "ok"); else status(`Saved – ${p.name} company details.`, "ok"); } };
 $("#pDefault").onclick = () => { PROFS.defaultId = SEL; profSave(); renderSettings(); renderProfSel(); status(`${selProf().name} is now the default for new reports.`); };
-$("#pExport").onclick = () => { download(new Blob([JSON.stringify({app:"Failure Report Builder – company profiles", version:1, saved:new Date().toISOString(), defaultId:PROFS.defaultId, profiles:PROFS.profiles.map(resolved)}, null, 1)], {type:"application/json"}), "Company_profiles.json"); status("Company profiles exported to your Downloads folder."); };
+$("#pExport").onclick = () => { const data = pendingSafe(); download(new Blob([JSON.stringify({app:"Failure Report Builder – companies", version:2, saved:new Date().toISOString(), defaultId:data.defaultId, profiles:data.profiles.map(resolved)}, null, 1)], {type:"application/json"}), "frb-companies.json"); status(`Exported ${data.profiles.length} companies to frb-companies.json (Downloads folder).`, "ok"); };
 $("#pImport").onclick = () => $("#pFile").click();
 $("#pFile").addEventListener("change", async e => { const f = e.target.files[0]; e.target.value = ""; if(!f) return;
-  try{ const d = JSON.parse(await f.text()), list = d.profiles || (d.id ? [d] : []); if(!list.length) throw new Error("no profiles in file");
-    let added = 0, replaced = 0;
-    list.forEach(np => { if(!np.id || !np.name) return; const i = PROFS.profiles.findIndex(p => p.id===np.id);
-      const b = BUILTIN_PROFILES.find(x => x.id===np.id); const v = {...np, builtin: !!b};
-      if(i >= 0){ PROFS.profiles[i] = v; replaced++; } else { PROFS.profiles.push(v); added++; } });
-    profSave(); renderSettings(); applyTheme(); status(`Imported profiles: ${added} added, ${replaced} updated.`); }
-  catch(err){ alert("That file isn't a company profiles file: "+err.message); } });
+  try{ const d = JSON.parse(await f.text()), list = Array.isArray(d) ? d : (d.profiles || (d.id ? [d] : [])); if(!list.length) throw new Error("no companies in this file");
+    revertPending(true); const backup = JSON.stringify(PROFS); let added = 0, updated = 0; const norm = t => String(t||"").trim().toLowerCase();
+    list.forEach(np => { if(!np || !np.name || !String(np.name).trim()) return; np = JSON.parse(JSON.stringify(np)); delete np.aiPrev; for(const [k,b] of Object.entries(BUILTIN_LOGOS)) if(np.logo && np.logo===b.data){ np.logo = "builtin:"+k; delete np.logoAR; delete np.logoDark; }
+      let i = np.id ? PROFS.profiles.findIndex(p => p.id===np.id) : -1; if(i < 0) i = PROFS.profiles.findIndex(p => norm(p.name)===norm(np.name));   // merge: same id, else same name
+      if(i >= 0){ const cur = PROFS.profiles[i]; const v = {...cur, ...np, id: cur.id, builtin: !!cur.builtin, d: {...(cur.d||{}), ...(np.d||{})}}; PROFS.profiles[i] = v; updated++; }
+      else { const id = (np.id && !PROFS.profiles.some(p => p.id===np.id)) ? np.id : newId(); PROFS.profiles.push({...np, id, builtin:false, d:{legal:"",address:"",phone:"",email:"",website:"",coreg:"",vat:"",extra:"", ...(np.d||{})}}); added++; } });
+    if(!added && !updated) throw new Error("no companies with a name in this file");
+    if(!profSave()){ PROFS = JSON.parse(backup); renderSettings(); return; }
+    renderSettings(); renderProfSel(); applyTheme(); status(`Imported companies: ${added} added, ${updated} updated.`, "ok"); }
+  catch(err){ alert("That file isn't a companies file (frb-companies.json): "+err.message); } });
 
 // test / automation hooks
 $("#colApply").onclick = applyColours;
