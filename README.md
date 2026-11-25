@@ -37,7 +37,7 @@ Downloading the generated `.pptx` from inside an iframe works in current Chrome,
 ## How it works / data
 
 - **Fully client-side.** There is no server or database. Photos and report data never leave the user's browser. The `.pptx` is built locally (PptxGenJS is bundled in the file).
-- **Each open starts at the home screen with a blank report.** To continue a report later, open it from **Previous reports**, or open the saved `.json` file with **Open saved report…** on the home screen (or drag it onto the page).
+- **Each open starts at the home screen with a blank report.** To continue a report later, open it from **Previous reports**, or open the saved `.json` file with **Open saved report** on the home screen (or drag it onto the page).
 - **Previous reports** are stored in the browser's IndexedDB (photos included), also per browser and per domain.
 - **Company profiles** (logo, colours, details), settings and the remembered drop-down lists are stored in the browser's `localStorage`. That storage is **per browser and per domain**: profiles made on `boshoffgp.github.io` do not show up when the app is served from another URL (for example your own system), or in another browser or PC.
   - The export/import controls for profiles and drop-down history are hidden in this version (the functions are still built in). Ask us if you need to move them to another URL.
