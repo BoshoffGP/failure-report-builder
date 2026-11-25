@@ -1340,9 +1340,12 @@ async function runAIMatch(quiet){ const p = selProf(), lg = logoOf(p); if(!lg){ 
   if(!r){ $("#aiNote").innerHTML = "<span>Could not find clear colours in this logo – set them by hand.</span>"; $("#aiNote").className = "ainote warn"; return null; }
   p.accent = r.accent; p.dark = r.dark; p.headerStyle = r.headerStyle; delete p.accentText; p.aiResult = r; delete p.aiOffHint;
   renderSettings(); profChanged(); renderAI(); status(`✨ Colours matched to the logo: accent #${r.accent}, dark #${r.dark}.`, "ok"); return r; }
-function aiManualOverride(){ const p = selProf(); if(p && p.aiMatch){ p.aiMatch = false; p.aiOffHint = "AI colour match switched off because you changed a colour by hand. Turn it on again to re-match."; profSave(); renderAI(); } }
-$("#aiToggle").addEventListener("change", async e => { const p = selProf(); p.aiMatch = e.target.checked; delete p.aiOffHint; profSave(); renderAI();
-  if(p.aiMatch) await runAIMatch(); else { profChanged(); } });
+function aiManualOverride(){ const p = selProf(); if(p && p.aiMatch){ p.aiMatch = false; delete p.aiPrev; p.aiOffHint = "AI colour match switched off because you changed a colour by hand. Turn it on again to re-match."; profSave(); renderAI(); } }
+$("#aiToggle").addEventListener("change", async e => { const p = selProf(); p.aiMatch = e.target.checked; delete p.aiOffHint;
+  if(p.aiMatch){ if(!p.aiPrev) p.aiPrev = {accent:p.accent, dark:p.dark, headerStyle:p.headerStyle, accentText:p.accentText}; profSave(); renderAI(); await runAIMatch(); }
+  else { const v = p.aiPrev; delete p.aiPrev;
+    if(v){ ["accent","dark","headerStyle","accentText"].forEach(k => { if(v[k] === undefined) delete p[k]; else p[k] = v[k]; }); renderSettings(); profChanged(); renderAI(); status("Colours restored", "ok"); }
+    else { profSave(); renderAI(); profChanged(); } } });
 $("#aiRematch").onclick = () => runAIMatch();
 ["#cAccent","#hAccent","#cDark","#hDark"].forEach(id => $(id).addEventListener("input", aiManualOverride, true));
 document.querySelector('[data-pk="headerStyle"]').addEventListener("change", aiManualOverride, true);
